@@ -41,7 +41,7 @@ const Header = () => {
         })
       );
     }
-  }, [session]);
+  }, [session, dispatch]);
 
   // Search area
   const [searchQuery, setSearchQuery] = useState("");
@@ -66,7 +66,7 @@ const Header = () => {
       item.title.toLocaleLowerCase().includes(searchQuery.toLowerCase())
     );
     setFilteredProducts(filtered);
-  }, [searchQuery]);
+  }, [searchQuery, allData]);
 
   useEffect(() => {
     const handleRouteChange = () => setOpenCartDropdown(false);

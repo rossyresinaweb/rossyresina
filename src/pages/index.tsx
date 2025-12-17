@@ -23,7 +23,7 @@ export default function Home({ productData, collections, blogPosts, videos }: Pr
   const [open, setOpen] = useState<string | null>(null);
   useEffect(() => {
     dispatch(setAllProducts({ allProducts: productData }));
-  }, [productData]);
+  }, [productData, dispatch]);
   return (
     <main>
       <div className="max-w-screen-2xl mx-auto">

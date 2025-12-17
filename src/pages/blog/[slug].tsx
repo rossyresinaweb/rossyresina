@@ -1,4 +1,5 @@
 import Head from "next/head";
+import Image from "next/image";
 import Link from "next/link";
 import { FaFacebook, FaTwitter, FaLinkedin, FaPinterest, FaRss } from "react-icons/fa";
 import fs from "fs";
@@ -46,7 +47,7 @@ export default function BlogDetailPage({ post, recent }: Props) {
           <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
             {post?.image ? (
               <div className="relative h-48 md:h-64">
-                <img src={post.image} alt={post.title} className="absolute inset-0 w-full h-full object-cover" />
+                <Image src={((): string => { const s = String(post.image || ""); let u = s.replace(/\\/g, "/"); if (/^https?:\/\//i.test(u)) return u; return u ? (u.startsWith("/") ? u : "/" + u) : "/favicon-96x96.png"; })()} alt={post.title} fill className="object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-gray-200/60 to-transparent" />
               </div>
             ) : (

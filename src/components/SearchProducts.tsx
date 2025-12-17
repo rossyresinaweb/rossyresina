@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 import FormattedPrice from "./FormattedPrice";
 
 import { ProductProps } from "../../type";
@@ -7,9 +8,17 @@ type Item = {
 };
 
 const SearchProducts = ({ item }: Item) => {
+  const normImg = (s?: string) => {
+    const t = String(s || "");
+    if (!t) return "/favicon-96x96.png";
+    let u = t.replace(/\\/g, "/");
+    if (/^https?:\/\//i.test(u)) return u;
+    if (!u.startsWith("/")) u = "/" + u;
+    return u;
+  };
   return (
     <div className="flex items-center gap-4">
-      <img className="w-24" src={item.image} alt="productImage" />
+      <Image className="w-24 h-24 object-cover rounded" src={normImg(item.image)} alt="productImage" width={96} height={96} />
       <div>
         <p className="text-xs -mb-1">
           {item.brand}_{item.category}

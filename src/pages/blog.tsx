@@ -1,4 +1,5 @@
 import Head from "next/head";
+import Image from "next/image";
 import Link from "next/link";
 import fs from "fs";
 import path from "path";
@@ -44,7 +45,7 @@ export default function BlogPage({ posts }: Props) {
             <article key={p.slug} className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
               {p.image ? (
                 <div className="relative h-40">
-                  <img src={p.image} alt={p.title} className="absolute inset-0 w-full h-full object-cover" />
+                  <Image src={((): string => { const s = String(p.image || ""); let u = s.replace(/\\/g, "/"); if (/^https?:\/\//i.test(u)) return u; return u ? (u.startsWith("/") ? u : "/" + u) : "/favicon-96x96.png"; })()} alt={p.title} fill className="object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-t from-gray-200/60 to-transparent" />
                 </div>
               ) : (
