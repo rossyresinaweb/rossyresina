@@ -1,0 +1,10 @@
+[
+  {
+    "id": "1772659744201",
+    "name": "Administrador",
+    "email": "kemeny@gmail.com",
+    "passwordHash": "$2a$10$fhANZiBPq3rg8WlmIMwaEeqeZCNCt2rJ3du9YWoSsPeOfcIChKTL2",
+    "role": "ADMIN",
+    "createdAt": "2026-03-04T21:29:04.201Z"
+  }
+]

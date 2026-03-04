@@ -75,21 +75,7 @@ export default function CategoryPage({ slug, label, items }: Props) {
         />
         <meta property="og:type" content="website" />
       </Head>
-      <div className="mb-6">
-        <ul className="text-sm text-gray-600 flex items-center gap-2">
-          <li>
-            <Link href="/" className="hover:underline">Inicio</Link>
-          </li>
-          <li>/</li>
-          <li>
-            <Link href="/" className="hover:underline">Categorías</Link>
-          </li>
-          <li>/</li>
-          <li className="text-gray-800">{label || slug}</li>
-        </ul>
-      </div>
-
-      {label ? (
+{label ? (
         <>
           <h1 className="text-2xl font-semibold mb-4">{label}</h1>
           {items.length > 0 ? (

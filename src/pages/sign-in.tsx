@@ -1,4 +1,4 @@
-import Head from "next/head";
+﻿import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
 import { useSession, signIn, signOut } from "next-auth/react";
@@ -14,7 +14,8 @@ export default function SignInPage() {
 
   useEffect(() => {
     if (session) {
-      router.replace("/");
+      const cb = typeof router.query.callbackUrl === "string" ? router.query.callbackUrl : "/";
+      router.replace(cb);
     }
   }, [session, router]);
 
@@ -52,7 +53,8 @@ export default function SignInPage() {
             <button
               onClick={() => {
                 setLoading(true);
-                signIn("credentials", { email, password, callbackUrl: "/" }).finally(() => setLoading(false));
+                const cb = typeof router.query.callbackUrl === "string" ? router.query.callbackUrl : "/";
+                signIn("credentials", { email, password, callbackUrl: cb }).finally(() => setLoading(false));
               }}
               className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md bg-amazon_blue text-white hover:bg-amazon_yellow hover:text-black"
             >
@@ -79,6 +81,11 @@ export default function SignInPage() {
           <p>
             Al continuar aceptas nuestros <Link href="/terms" className="text-amazon_blue hover:underline">términos</Link> y <Link href="/privacy" className="text-amazon_blue hover:underline">privacidad</Link>.
           </p>
+        </div>
+
+        <div className="mt-4 text-center text-sm text-gray-600">
+          <span>¿No tienes cuenta?</span>{" "}
+          <Link href="/register" className="text-amazon_blue hover:underline">Regístrate</Link>
         </div>
 
         <div className="mt-6 text-center">

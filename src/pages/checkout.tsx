@@ -47,16 +47,7 @@ export default function CheckoutPage() {
       <Head>
         <title>Rossy Resina — Checkout</title>
       </Head>
-
-      <nav className="text-sm text-gray-600 mb-4">
-        <Link className="hover:underline" href="/">Inicio</Link>
-        <span className="mx-2">/</span>
-        <Link className="hover:underline" href="/cart">Carrito</Link>
-        <span className="mx-2">/</span>
-        <span className="font-medium text-gray-800">Checkout</span>
-      </nav>
-
-      {productData.length === 0 ? (
+{productData.length === 0 ? (
         <div className="bg-white rounded-lg p-8 shadow">
           <p className="text-lg">Tu carrito está vacío.</p>
           <Link href="/" className="inline-block mt-4 px-4 py-2 rounded bg-gradient-to-r from-brand_purple via-brand_pink to-brand_teal text-white hover:brightness-105">Ir a comprar</Link>

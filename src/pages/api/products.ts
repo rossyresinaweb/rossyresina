@@ -27,9 +27,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   }
   const isAdmin = async () => {
     const session = (await getServerSession(req, res, authOptions as any)) as Session | null;
-    const allowed = (process.env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
-    const email = (session?.user?.email || "").toLowerCase();
-    return session && (allowed.length === 0 || allowed.includes(email));
+    return !!session && (session.user as any)?.role === "ADMIN";
   };
   if (req.method === "POST") {
     return isAdmin().then((ok) => {

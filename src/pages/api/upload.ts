@@ -12,9 +12,7 @@ function ensureDir(dir: string) {
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") return res.status(405).json({ error: "Método no permitido" });
   const session = (await getServerSession(req, res, authOptions as any)) as Session | null;
-  const allowed = (process.env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
-  const email = (session?.user?.email || "").toLowerCase();
-  if (!session || (allowed.length && !allowed.includes(email))) return res.status(401).json({ error: "No autorizado" });
+  if (!session || (session.user as any)?.role !== "ADMIN") return res.status(401).json({ error: "No autorizado" });
   const { filename, data } = (req.body || {}) as any;
   if (!data || typeof data !== "string") return res.status(400).json({ error: "Datos inválidos" });
 

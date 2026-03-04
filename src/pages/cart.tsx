@@ -17,12 +17,6 @@ const CartPage = () => {
   }, [productData]);
   return (
     <div className="max-w-screen-2xl mx-auto px-6 py-4">
-      <nav className="text-sm text-gray-600 mb-4">
-        <Link className="hover:underline" href="/">Inicio</Link>
-        <span className="mx-2">/</span>
-        <span className="font-medium text-gray-800">Carrito</span>
-      </nav>
-
       {productData.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-5 gap-6 md:gap-10">
           <div className="bg-white md:col-span-4 p-4 rounded-lg">

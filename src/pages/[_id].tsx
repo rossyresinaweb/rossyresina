@@ -1,4 +1,4 @@
-﻿import FormattedPrice from "@/components/FormattedPrice";
+import FormattedPrice from "@/components/FormattedPrice";
 import { addToCart, addToFavorite } from "@/store/nextSlice";
 import Image from "next/image";
 import React, { useMemo, useState } from "react";
@@ -6,11 +6,10 @@ import Link from "next/link";
 import { FaHeart } from "react-icons/fa";
 import { HiShoppingCart } from "react-icons/hi";
 import { useDispatch } from "react-redux";
-import fs from "fs";
-import path from "path";
 import type { ProductProps } from "../../type";
 import Head from "next/head";
 import { useRouter } from "next/router";
+import productData from "../data/products.json";
 
 interface Props {
   product: ProductProps | null;
@@ -117,14 +116,7 @@ const DynamicPage = ({ product, recs }: Props) => {
         </div>
       ) : (
         <>
-          <nav className="text-sm text-gray-600 mb-3">
-            <Link href="/" className="hover:underline">Inicio</Link>
-            <span className="mx-2">/</span>
-            <Link href={`/categoria/${categorySlug}`} className="hover:underline">{product.category}</Link>
-            <span className="mx-2">/</span>
-            <span className="font-medium text-gray-800">{product.title}</span>
-          </nav>
-          <div className="w-full grid md:grid-cols-2 gap-6">
+<div className="w-full grid md:grid-cols-2 gap-6">
             <div className="bg-gray-100 rounded-xl p-4">
               <div
                 className="flex items-center justify-center bg-white rounded-lg relative overflow-hidden group"
@@ -328,20 +320,14 @@ const DynamicPage = ({ product, recs }: Props) => {
 export default DynamicPage;
 
 export const getServerSideProps = async (ctx: any) => {
-  const id = String(ctx?.params?._id || "");
-  try {
-    const dataPath = path.join(process.cwd(), "src", "data", "products.json");
-    const raw = fs.readFileSync(dataPath, "utf-8");
-    const all: ProductProps[] = JSON.parse(raw);
-    const product =
-      all.find((p) => String(p._id) === id) ||
-      all.find((p) => String(p.code).toLowerCase() === id.toLowerCase()) ||
-      null;
-    const recs = product
-      ? all.filter((p) => String(p.category) === String(product.category) && String(p._id) !== id).slice(0, 4)
-      : [];
-    return { props: { product, recs } };
-  } catch {
-    return { props: { product: null, recs: [] } };
-  }
+  const id = String(ctx?.params?._id || "").trim();
+  const all: ProductProps[] = Array.isArray(productData) ? (productData as ProductProps[]) : [];
+  const product =
+    all.find((p) => String(p._id) === id) ||
+    all.find((p) => String(p.code || "").toLowerCase() === id.toLowerCase()) ||
+    null;
+  const recs = product
+    ? all.filter((p) => String(p.category) === String(product.category) && String(p._id) !== String(product._id)).slice(0, 4)
+    : [];
+  return { props: { product, recs } };
 };

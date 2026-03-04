@@ -37,12 +37,6 @@ export default function FAQPage() {
         <title>Rossy Resina — Preguntas frecuentes</title>
       </Head>
 
-      <nav className="text-sm text-gray-600 mb-4">
-        <Link className="hover:underline" href="/">Inicio</Link>
-        <span className="mx-2">/</span>
-        <span className="font-medium text-gray-800">Preguntas frecuentes</span>
-      </nav>
-
       <h1 className="text-2xl font-semibold mb-4 text-amazon_blue">Preguntas frecuentes</h1>
       <div className="bg-white rounded-lg shadow divide-y divide-gray-200">
         {data.map((item, idx) => (

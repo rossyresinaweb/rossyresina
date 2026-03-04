@@ -17,13 +17,7 @@ export default function CollectionPage({ title, products }: Props) {
         <meta name="description" content={`Colección ${title} de productos seleccionados.`} />
       </Head>
       <div className="max-w-screen-2xl mx-auto">
-        <nav className="text-sm text-gray-600 mb-4">
-          <Link className="hover:underline" href="/">Inicio</Link>
-          <span className="mx-2">/</span>
-          <span className="font-medium text-gray-800">{title}</span>
-        </nav>
-
-        {products.length === 0 ? (
+{products.length === 0 ? (
           <div className="bg-white rounded-lg p-8 shadow">
             <p className="text-lg">No hay productos en esta colección.</p>
             <Link href="/" className="inline-block mt-4 px-4 py-2 bg-amazon_blue text-white rounded hover:bg-amazon_yellow hover:text-black">Ir al inicio</Link>

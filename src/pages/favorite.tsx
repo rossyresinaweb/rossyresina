@@ -13,11 +13,6 @@ const FavoritePage = () => {
 
   return (
     <div className="max-w-screen-xl mx-auto px-6 gap-10 py-4">
-      <nav className="text-sm text-gray-600 mb-3">
-        <Link href="/" className="hover:underline">Inicio</Link>
-        <span className="mx-2">/</span>
-        <span className="font-medium text-gray-800">Mis favoritos</span>
-      </nav>
       {favoriteData.length > 0 ? (
         <div className="bg-white p-4 rounded-lg">
           <div className="flex items-center justify-between border-b-[1px] border-b-gray-400 pb-1">

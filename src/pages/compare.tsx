@@ -29,13 +29,7 @@ export default function ComparePage() {
 
   return (
     <div className="max-w-screen-2xl mx-auto px-6 py-6">
-      <nav className="text-sm text-gray-600 mb-4">
-        <Link className="hover:underline" href="/">Inicio</Link>
-        <span className="mx-2">/</span>
-        <span className="font-medium text-gray-800">Comparar productos</span>
-      </nav>
-
-      <div className="bg-white rounded-lg shadow p-4">
+<div className="bg-white rounded-lg shadow p-4">
         <div className="flex flex-col md:flex-row md:items-center gap-3 justify-between">
           <div className="flex-1">
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Busca por nombre o categoría" className="w-full md:w-96 px-3 py-2 border border-gray-300 rounded" />

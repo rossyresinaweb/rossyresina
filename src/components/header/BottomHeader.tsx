@@ -5,7 +5,6 @@ import { useSelector, useDispatch } from "react-redux";
 import { removeUser } from "@/store/nextSlice";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { BiCaretDown } from "react-icons/bi";
 
 const BottomHeader = () => {
   const dispatch = useDispatch();
@@ -16,7 +15,6 @@ const BottomHeader = () => {
   };
   const [open, setOpen] = useState(false);
   const [openMobile, setOpenMobile] = useState(false);
-  const [openBrands, setOpenBrands] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const mega = [
     { title: "Moldes de silicona", slug: "moldes-de-silicona", items: ["Redondos", "Rectangulares", "Geométricos", "Letras y números", "Personalizados"] },
@@ -26,20 +24,17 @@ const BottomHeader = () => {
     { title: "Creaciones", slug: "creaciones", items: ["Joyas", "Llaveros", "Decoración", "Arte"] },
     { title: "Talleres", slug: "talleres", items: ["Principiantes", "Avanzados", "Fechas"] },
   ];
-  const brands = ["Rossy Resina", "Ecoresina", "Resina UV", "Pigmentos Pro"];
   useEffect(() => {
     const onDown = (e: MouseEvent | TouchEvent) => {
       const el = menuRef.current;
-      if ((open || openBrands || openMobile) && el && !el.contains(e.target as Node)) {
+      if ((open || openMobile) && el && !el.contains(e.target as Node)) {
         setOpen(false);
-        setOpenBrands(false);
         setOpenMobile(false);
       }
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setOpen(false);
-        setOpenBrands(false);
         setOpenMobile(false);
       }
     };
@@ -51,14 +46,14 @@ const BottomHeader = () => {
       document.removeEventListener("touchstart", onDown, true);
       document.removeEventListener("keydown", onKey, true);
     };
-  }, [open]);
+  }, [open, openMobile]);
 
   return (
     <div ref={menuRef} className="w-full h-12 bg-white text-sm text-gray-700 px-4 flex items-center relative border-b border-gray-200">
-      <button onClick={() => { setOpen((v) => !v); setOpenBrands(false); setOpenMobile(false); }} className="hidden md:flex items-center gap-2 h-9 px-3 rounded-md border border-gray-200 hover:border-amazon_blue">
+      <button onClick={() => { setOpen((v) => !v); setOpenMobile(false); }} className="hidden md:flex items-center gap-2 h-9 px-3 rounded-md border border-gray-200 hover:border-amazon_blue">
         <LuMenu className="text-lg" /> Ver categorías
       </button>
-      <button onClick={() => { setOpenMobile(true); setOpen(false); setOpenBrands(false); }} className="md:hidden flex items-center gap-2 h-9 px-3 rounded-md border border-gray-200">
+      <button onClick={() => { setOpenMobile(true); setOpen(false); }} className="md:hidden flex items-center gap-2 h-9 px-3 rounded-md border border-gray-200">
         <LuMenu className="text-lg" /> Menú
       </button>
       {open && (
@@ -95,24 +90,7 @@ const BottomHeader = () => {
         <Link href="/" className="inline-flex items-center h-9">Inicio</Link>
         <Link href="/productos" className="inline-flex items-center h-9">Productos</Link>
         <Link href="/blog" className="inline-flex items-center h-9">Blog</Link>
-        <Link href="/faq" className="inline-flex items-center h-9">Páginas</Link>
-        <Link href="/productos" className="inline-flex items-center h-9">Tienda</Link>
-        <button onClick={() => { setOpenBrands((v) => !v); setOpen(false); }} className="inline-flex items-center gap-1 h-9">
-          Marcas <BiCaretDown />
-        </button>
-        {openBrands && (
-          <div className="absolute top-12 left-64 bg-white text-black rounded-md shadow-lg border border-gray-200 z-50 min-w-[200px]">
-            <ul className="py-2 text-sm">
-              {brands.map((b) => (
-                <li key={b}>
-                  <Link href="/productos" className="block px-4 py-2 hover:bg-gray-100" onClick={() => setOpenBrands(false)}>
-                    {b}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+        <Link href="/categoria/talleres" className="inline-flex items-center h-9">Capacitaciones</Link>
       </div>
 
       <div className="ml-auto hidden md:flex items-center gap-2 text-amazon_blue">
@@ -162,10 +140,10 @@ const BottomHeader = () => {
             <div className="mt-5">
               <span className="text-base font-semibold">Accesos rápidos</span>
               <div className="grid grid-cols-2 gap-2 mt-3">
+                <Link href="/" className="px-3 py-2 text-sm border rounded" onClick={() => setOpenMobile(false)}>Inicio</Link>
                 <Link href="/productos" className="px-3 py-2 text-sm border rounded" onClick={() => setOpenMobile(false)}>Productos</Link>
-                <Link href="/categoria/talleres" className="px-3 py-2 text-sm border rounded" onClick={() => setOpenMobile(false)}>Capacítate</Link>
                 <Link href="/blog" className="px-3 py-2 text-sm border rounded" onClick={() => setOpenMobile(false)}>Blog</Link>
-                <Link href="/faq" className="px-3 py-2 text-sm border rounded" onClick={() => setOpenMobile(false)}>Ayuda</Link>
+                <Link href="/categoria/talleres" className="px-3 py-2 text-sm border rounded" onClick={() => setOpenMobile(false)}>Capacitaciones</Link>
               </div>
             </div>
           </div>

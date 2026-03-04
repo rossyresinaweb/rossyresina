@@ -10,12 +10,6 @@ export default function AboutUsPage() {
         <meta name="description" content="Conoce la historia, misión y valores de Rossy Resina. Calidad en resina epoxi, moldes, pigmentos y asesoría." />
       </Head>
 
-      <nav className="text-sm text-gray-600 mb-4">
-        <Link href="/" className="hover:underline">Inicio</Link>
-        <span className="mx-2">/</span>
-        <span className="font-medium text-gray-800">Sobre nosotros</span>
-      </nav>
-
       <header className="rounded-lg bg-amazon_blue text-white p-6 shadow">
         <h1 className="text-2xl md:text-3xl font-semibold">Somos Rossy Resina</h1>
         <p className="mt-2 text-sm md:text-base opacity-95">Pasión por la resina epoxi y UV, asesoría cercana y productos de calidad para que tus proyectos brillen.</p>

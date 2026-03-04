@@ -30,15 +30,6 @@ export default function BlogPage({ posts }: Props) {
       <Head>
         <title>Rossy Resina — Blog</title>
       </Head>
-      <div className="mb-6">
-        <ul className="text-sm text-gray-600 flex items-center gap-2">
-          <li>
-            <Link href="/" className="hover:underline">Inicio</Link>
-          </li>
-          <li>/</li>
-          <li className="text-gray-800">Blog</li>
-        </ul>
-      </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2 grid gap-6">
           {posts.map((p) => (

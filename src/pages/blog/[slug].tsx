@@ -29,19 +29,6 @@ export default function BlogDetailPage({ post, recent }: Props) {
       <Head>
         <title>Rossy Resina — {post ? post.title : "Blog"}</title>
       </Head>
-      <div className="mb-6">
-        <ul className="text-sm text-gray-600 flex items-center gap-2">
-          <li>
-            <Link href="/" className="hover:underline">Inicio</Link>
-          </li>
-          <li>/</li>
-          <li>
-            <Link href="/blog" className="hover:underline">Blog</Link>
-          </li>
-          <li>/</li>
-          <li className="text-gray-800">{post ? post.title : "Entrada"}</li>
-        </ul>
-      </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2">
           <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">

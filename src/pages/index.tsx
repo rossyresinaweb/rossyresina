@@ -17,7 +17,8 @@ interface Props {
 export default function Home({ productData }: Props) {
   const SITE_URL = "https://rossyresinaonlineweb.vercel.app";
   const pageTitle = "Rossy Resina | Resina epóxica, moldes y pigmentos en Perú";
-  const pageDesc = "Compra resina epóxica, moldes de silicona, pigmentos y accesorios. Envío a todo Perú y atención por WhatsApp.";
+  const pageDesc =
+    "Compra resina epóxica, moldes de silicona, pigmentos y accesorios. Envío a todo Perú y atención por WhatsApp.";
   const dispatch = useDispatch();
   const featuredProducts = productData.slice(0, 12);
 
@@ -25,7 +26,7 @@ export default function Home({ productData }: Props) {
     dispatch(setAllProducts({ allProducts: productData }));
   }, [productData, dispatch]);
 
-    return (
+  return (
     <>
       <Head>
         <title>{pageTitle}</title>
@@ -35,13 +36,13 @@ export default function Home({ productData }: Props) {
         <meta property="og:description" content={pageDesc} />
         <meta property="og:url" content={SITE_URL} />
         <meta property="og:type" content="website" />
-        <meta property="og:image" content={${SITE_URL}/favicon-96x96.png} />
+        <meta property="og:image" content={`${SITE_URL}/favicon-96x96.png`} />
         <meta name="twitter:card" content="summary" />
         <meta name="twitter:title" content={pageTitle} />
         <meta name="twitter:description" content={pageDesc} />
       </Head>
       <main>
-      <div className="max-w-screen-2xl mx-auto space-y-10 md:space-y-12 pb-10">
+        <div className="max-w-screen-2xl mx-auto space-y-10 md:space-y-12 pb-10">
         {/* Hero */}
         <section className="px-4 md:px-6 mt-4 md:mt-6">
           <div className="rounded-2xl overflow-hidden border border-gray-200 bg-white">
@@ -102,9 +103,9 @@ export default function Home({ productData }: Props) {
             ))}
           </div>
         </section>
-      </div>
-    </main>\r
-    </>\r
+        </div>
+      </main>
+    </>
   );
 }
 

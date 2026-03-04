@@ -33,12 +33,6 @@ export default function ContactPage() {
         <title>Rossy Resina — Contacto</title>
       </Head>
 
-      <nav className="text-sm text-gray-600 mb-4">
-        <Link className="hover:underline" href="/">Inicio</Link>
-        <span className="mx-2">/</span>
-        <span className="font-medium text-gray-800">Contacto</span>
-      </nav>
-
       <div className="grid md:grid-cols-3 gap-6">
         <section className="md:col-span-2 bg-white rounded-lg p-6 shadow">
           <h1 className="text-2xl font-semibold mb-4">Contáctanos</h1>

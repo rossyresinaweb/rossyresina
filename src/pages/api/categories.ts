@@ -26,9 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).json(items);
   }
   const session = (await getServerSession(req, res, authOptions as any)) as Session | null;
-  const allowed = (process.env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
-  const email = (session?.user?.email || "").toLowerCase();
-  if (!session || (allowed.length && !allowed.includes(email))) return res.status(401).json({ error: "No autorizado" });
+  if (!session || (session.user as any)?.role !== "ADMIN") return res.status(401).json({ error: "No autorizado" });
 
   if (req.method === "POST") {
     const items = readCategories();

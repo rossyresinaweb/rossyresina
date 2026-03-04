@@ -419,11 +419,9 @@ export default function AdminProducts() {
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
   const session = await getServerSession(ctx.req, ctx.res, authOptions);
-  const allowed = (process.env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
-  const email = (session?.user?.email || "").toLowerCase();
-  const ok = session && (allowed.length === 0 || allowed.includes(email));
+  const ok = session && (session.user as any)?.role === "ADMIN";
   if (!ok) {
-    return { redirect: { destination: "/", permanent: false } };
+    return { redirect: { destination: "/sign-in?callbackUrl=/admin", permanent: false } };
   }
   return { props: {} };
 };
