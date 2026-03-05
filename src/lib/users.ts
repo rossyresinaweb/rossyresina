@@ -1,4 +1,5 @@
-﻿import bcrypt from "bcryptjs";
+// Use require to avoid type resolution issues during production builds.
+const bcrypt = require("bcryptjs");
 import prisma from "./prisma";
 
 export type UserRole = "ADMIN" | "EDITOR" | "CUSTOMER";
@@ -80,3 +81,4 @@ export async function ensureAdminFromEnv() {
     },
   });
 }
+
