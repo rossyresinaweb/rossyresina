@@ -11,6 +11,7 @@ import { useRouter } from "next/router";
 import Products from "@/components/Products";
 import { readCatalog } from "@/lib/catalogStore";
 import { useSession, signIn } from "next-auth/react";
+import Script from "next/script";
 
 interface Props {
   product: ProductProps | null;
@@ -269,9 +270,10 @@ const DynamicPage = ({ product, recs }: Props) => {
         <meta property="og:image" content={pageImage} />
       </Head>
       {productJsonLd && (
-        <script
-          key="product-jsonld"
+        <Script
+          id="product-jsonld"
           type="application/ld+json"
+          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
         />
       )}
