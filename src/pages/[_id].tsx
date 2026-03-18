@@ -269,9 +269,11 @@ const DynamicPage = ({ product, recs }: Props) => {
         <meta property="og:image" content={pageImage} />
       </Head>
       {productJsonLd && (
-        <script id="product-jsonld" type="application/ld+json" suppressHydrationWarning>
-          {JSON.stringify(productJsonLd)}
-        </script>
+        <script
+          id="product-jsonld"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+        />
       )}
 
       {!product ? (
