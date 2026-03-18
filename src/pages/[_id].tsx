@@ -267,14 +267,13 @@ const DynamicPage = ({ product, recs }: Props) => {
         <meta property="og:description" content={pageDesc} />
         <meta property="og:type" content="product" />
         <meta property="og:image" content={pageImage} />
+        {productJsonLd && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+          />
+        )}
       </Head>
-      {productJsonLd && (
-        <script
-          key="product-jsonld"
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
-        />
-      )}
 
       {!product ? (
         <div className="w-full flex flex-col gap-4 items-center justify-center py-20">
