@@ -19,40 +19,6 @@ export default function App({
   const router = useRouter();
   const gaId = process.env.NEXT_PUBLIC_GA_ID;
   const googleSiteVerification = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION;
-  const productForJsonLd = (pageProps as any)?.product;
-  const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL || "https://rossyresina.vercel.app";
-  const productJsonLd =
-    productForJsonLd && typeof productForJsonLd === "object"
-      ? {
-          "@context": "https://schema.org",
-          "@type": "Product",
-          name: String(productForJsonLd.title || productForJsonLd.code || "Producto"),
-          image: [
-            String(productForJsonLd.image || "").startsWith("http")
-              ? String(productForJsonLd.image)
-              : `${siteUrl}/${String(productForJsonLd.image || "").replace(/^\/+/, "")}`,
-          ],
-          description: String(productForJsonLd.description || ""),
-          sku: String(productForJsonLd.code || productForJsonLd._id || ""),
-          category: String(productForJsonLd.category || ""),
-          brand: productForJsonLd.brand
-            ? { "@type": "Brand", name: String(productForJsonLd.brand) }
-            : undefined,
-          offers: {
-            "@type": "Offer",
-            priceCurrency: "PEN",
-            price: Number(productForJsonLd.price || 0).toFixed(2),
-            availability:
-              Number(productForJsonLd.stock || 1) > 0
-                ? "https://schema.org/InStock"
-                : "https://schema.org/OutOfStock",
-            url: `${siteUrl}/${encodeURIComponent(
-              String(productForJsonLd.code || productForJsonLd._id || "")
-            )}`,
-          },
-        }
-      : null;
   const isAdminRoute = router.pathname.startsWith("/admin");
   const isCapacitaciones =
     router.pathname.startsWith("/capacitaciones") ||
@@ -84,13 +50,6 @@ export default function App({
             <meta name="viewport" content="width=device-width, initial-scale=1" />
             {googleSiteVerification && (
               <meta name="google-site-verification" content={googleSiteVerification} />
-            )}
-            {productJsonLd && (
-              <script
-                id="product-jsonld-app"
-                type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
-              />
             )}
             <style>{`
                 @keyframes rrPageEnter {
