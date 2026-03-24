@@ -454,8 +454,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           })
         );
       }
-      const dbRows = products.map(toLegacyProduct);
-      return res.status(200).json(dbRows);
+      
+      // Merge con catálogo local para asegurar sincronización
+      const catalog = readCatalog();
+      const catalogRows = Array.isArray(catalog) ? catalog.map(toLegacyFromCatalog) : [];
+      const merged = mergeProducts(products.map(toLegacyProduct), catalogRows);
+      
+      return res.status(200).json(merged);
     } catch (error: any) {
       return res.status(500).json({ error: toFriendlyDbError(error, "No se pudieron obtener productos") });
     }
