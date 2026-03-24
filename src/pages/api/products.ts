@@ -10,6 +10,7 @@ const productBaseSelect = {
   legacyId: true,
   code: true,
   barcode: true,
+  sku: true,
   title: true,
   description: true,
   brand: true,
@@ -184,6 +185,7 @@ const toLegacyProduct = (p: any) => ({
   _id: p.legacyId ?? p.id,
   code: fixMojibakeText(p.code || ""),
   barcode: fixMojibakeText(p.barcode || ""),
+  sku: fixMojibakeText(p.sku || ""),
   stock: normalizeStock(p.stock),
   title: fixMojibakeText(p.title || "Producto"),
   description: fixMojibakeText(p.description || ""),
@@ -200,6 +202,7 @@ const toLegacyFromCatalog = (p: any) => ({
   _id: p?._id ?? p?.id ?? p?.code ?? "",
   code: fixMojibakeText(p?.code || ""),
   barcode: fixMojibakeText(p?.barcode || ""),
+  sku: fixMojibakeText(p?.sku || ""),
   stock: normalizeStock(p?.stock),
   title: fixMojibakeText(p?.title || "Producto"),
   description: fixMojibakeText(p?.description || ""),
@@ -303,7 +306,8 @@ const toDbData = (body: any) => {
   const isNew = Boolean(body?.isNew);
   const stock = normalizeStock(body?.stock);
   const barcode = sanitizeBarcode(body?.barcode);
-  return { legacyId, code, barcode, title, description, brand, category, image, images: gallery, price, oldPrice, isNew, stock };
+  const sku = fixMojibakeText(String(body?.sku || "").trim()) || null;
+  return { legacyId, code, barcode, sku, title, description, brand, category, image, images: gallery, price, oldPrice, isNew, stock };
 };
 
 const syncCatalogProduct = (payload: any) => {
