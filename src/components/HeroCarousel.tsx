@@ -264,17 +264,17 @@ export default function HeroCarousel({ remateProducts = [], topVisitedProducts =
           <div className="absolute inset-0 transition-opacity duration-1000 ease-in-out bg-gradient-to-br from-red-50 via-white to-orange-50">
             <div className="absolute top-20 right-10 h-96 w-96 rounded-full bg-red-200/30 blur-3xl" />
             
-            <div className="relative mx-auto h-full max-w-7xl px-4 py-6 md:px-8 md:py-8 flex items-center">
-              <div className="grid w-full grid-cols-1 gap-6 md:grid-cols-4 items-center">
+            <div className="relative mx-auto h-full max-w-7xl px-4 py-4 md:px-6 md:py-6 flex items-center">
+              <div className="grid w-full grid-cols-1 gap-6 md:grid-cols-12 items-center">
                 {/* Producto izquierda */}
                 {leftProduct && !isReferenceProductImage(leftProduct) && (
-                  <div className="hidden md:flex justify-end">
-                    <div className="relative w-full max-w-[280px]">
-                      <div className="rounded-2xl overflow-hidden shadow-2xl">
+                  <div className="hidden md:flex col-span-12 md:col-span-3 justify-center">
+                    <div className="relative w-full max-w-[240px]">
+                      <div className="rounded-xl overflow-hidden border border-gray-200 shadow-md">
                         <ProductCard p={leftProduct} isFeature={true} />
                       </div>
                       {discountPercent !== null && (
-                        <div className="absolute -bottom-4 -right-4 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-red-500 to-red-600 text-2xl font-extrabold text-white shadow-lg border-4 border-white">
+                        <div className="absolute -bottom-3 -right-3 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-red-500 to-red-600 text-xl font-extrabold text-white shadow-lg border-4 border-white">
                           -{discountPercent}%
                         </div>
                       )}
@@ -283,8 +283,7 @@ export default function HeroCarousel({ remateProducts = [], topVisitedProducts =
                 )}
 
                 {/* Centro - Contenido principal */}
-                <div className="col-span-2 z-10 text-center">
-                  <div className="inline-flex items-center rounded-full bg-red-100 px-4 py-1.5 text-xs md:text-sm font-bold text-red-700 uppercase tracking-wider mb-3">
+                <div className="col-span-12 md:col-span-6 z-10 text-center">                  <div className="inline-flex items-center rounded-full bg-red-100 px-4 py-1.5 text-xs md:text-sm font-bold text-red-700 uppercase tracking-wider mb-3">
                     🔥 OFERTAS Limitadas
                   </div>
                   
@@ -314,11 +313,11 @@ export default function HeroCarousel({ remateProducts = [], topVisitedProducts =
                 </div>
 
                 {/* Productos derecha */}
-                <div className="hidden md:flex flex-col gap-4 justify-center items-start">
-                  <div className="w-full max-w-[260px]">
+                <div className="hidden md:flex col-span-12 md:col-span-3 flex-col gap-4 justify-center items-center">
+                  <div className="w-full max-w-[240px]">
                     {rightTop && <ProductCard p={rightTop} />}
                   </div>
-                  <div className="w-full max-w-[260px]">
+                  <div className="w-full max-w-[240px]">
                     {rightBottom && <ProductCard p={rightBottom} />}
                   </div>
                 </div>
@@ -331,42 +330,38 @@ export default function HeroCarousel({ remateProducts = [], topVisitedProducts =
           <div className="absolute inset-0 transition-opacity duration-1000 ease-in-out bg-gradient-to-br from-amber-50 via-white to-yellow-50">
             <div className="absolute -top-40 -left-40 h-96 w-96 rounded-full bg-yellow-300/20 blur-3xl" />
             
-            <div className="relative mx-auto h-full max-w-7xl px-4 py-6 md:px-8 md:py-8 flex items-center">
-              <div className="grid w-full grid-cols-1 gap-6 md:grid-cols-4 items-center">
-                <div className="z-10">
-                  <div className="inline-flex items-center rounded-full bg-amber-100 px-4 py-1.5 text-xs md:text-sm font-bold text-amber-700 uppercase tracking-wider mb-3">
+            <div className="relative mx-auto h-full max-w-7xl px-4 py-4 md:px-6 md:py-6 flex items-center">
+              <div className="grid w-full grid-cols-1 gap-6 md:grid-cols-12 items-center">
+                <div className="col-span-12 md:col-span-5">
+                  <div className="inline-flex items-center rounded-full bg-amber-100 px-4 py-1.5 text-xs md:text-sm font-bold text-amber-700 uppercase tracking-wider mb-2">
                     🎨 Moldes profesionales
                   </div>
-                  
-                  <h2 className="text-3xl md:text-5xl lg:text-6xl font-black text-gray-900 leading-tight">
+
+                  <h2 className="text-2xl md:text-4xl font-black text-gray-900 leading-tight">
                     Moldes de <span className="text-amber-600">Silicona</span>
                   </h2>
-                  
-                  <p className="mt-3 text-base md:text-lg text-gray-700 font-semibold">
+
+                  <p className="mt-3 text-sm md:text-base text-gray-700 font-semibold">
                     Crea piezas únicas y acelera tu producción
                   </p>
-                  
-                  <div className="mt-4 space-y-2 text-sm md:text-base text-gray-600">
-                    <p className="flex items-center gap-2"><span className="text-amber-600">✓</span> Silicona flexible premium</p>
-                    <p className="flex items-center gap-2"><span className="text-amber-600">✓</span> Desmolde fácil y seguro</p>
-                    <p className="flex items-center gap-2"><span className="text-amber-600">✓</span> Acabado profesional</p>
-                  </div>
-                  
+
+                  <ul className="mt-4 space-y-1 text-xs md:text-sm text-gray-600">
+                    <li className="flex items-center gap-2"><span className="text-amber-600">✓</span> Silicona flexible premium</li>
+                    <li className="flex items-center gap-2"><span className="text-amber-600">✓</span> Desmolde fácil y seguro</li>
+                    <li className="flex items-center gap-2"><span className="text-amber-600">✓</span> Acabado profesional</li>
+                  </ul>
+
                   <Link
                     href="/search?q=molde"
-                    className="mt-5 inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-500 px-6 py-3 font-bold text-gray-900 transition duration-300 hover:shadow-lg hover:scale-105"
+                    className="mt-4 inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-500 px-5 py-2 font-bold text-gray-900 transition duration-300 hover:shadow-lg hover:scale-105"
                   >
                     🔍 Explorar moldes
                   </Link>
                 </div>
 
-                <div className="hidden md:block">
+                <div className="col-span-12 md:col-span-7 grid grid-cols-1 gap-4 md:grid-cols-3">
                   {secondLeft && <ProductCard p={secondLeft} isFeature={true} />}
-                </div>
-                <div className="hidden md:block">
                   {secondCenter && <ProductCard p={secondCenter} isFeature={true} />}
-                </div>
-                <div className="hidden md:block">
                   {secondRight && <ProductCard p={secondRight} isFeature={true} />}
                 </div>
               </div>
