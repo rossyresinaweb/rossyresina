@@ -27,7 +27,16 @@ export default function HeroCarousel({ remateProducts = [], topVisitedProducts =
   const leftProduct = featured[0];
   const rightTop = featured[1] || featured[0];
   const rightBottom = featured[2] || featured[1] || featured[0];
-  const nextFeatured = remateProducts.slice(3, 7);
+  
+  // Filtro solo moldes para el slide 2 (Moldes de silicona)
+  const moldProducts = remateProducts.filter(p => {
+    const cat = String(p?.category || "").toLowerCase();
+    const title = String(p?.title || "").toLowerCase();
+    const code = String(p?.code || "").toLowerCase();
+    return cat.includes("molde") || title.includes("molde") || code.includes("mol_");
+  });
+  
+  const nextFeatured = moldProducts.length > 0 ? moldProducts.slice(0, 7) : remateProducts.slice(3, 7);
   const secondLeft = nextFeatured[0] || featured[0];
   const secondCenter = nextFeatured[1] || featured[1] || featured[0];
   const secondRight = nextFeatured[2] || featured[2] || featured[1] || featured[0];
@@ -280,7 +289,7 @@ export default function HeroCarousel({ remateProducts = [], topVisitedProducts =
             <div className="absolute -top-40 -left-40 h-96 w-96 rounded-full bg-yellow-300/20 blur-3xl" />
             
             <div className="relative mx-auto h-full max-w-7xl px-4 py-6 md:px-8 md:py-8 flex items-center">
-              <div className="grid w-full grid-cols-1 gap-6 md:grid-cols-3 items-center">
+              <div className="grid w-full grid-cols-1 gap-6 md:grid-cols-4 items-center">
                 <div className="z-10">
                   <div className="inline-flex items-center rounded-full bg-amber-100 px-4 py-1.5 text-xs md:text-sm font-bold text-amber-700 uppercase tracking-wider mb-3">
                     🎨 Moldes profesionales
@@ -308,8 +317,15 @@ export default function HeroCarousel({ remateProducts = [], topVisitedProducts =
                   </Link>
                 </div>
 
-                {secondLeft && <ProductCard p={secondLeft} isFeature={true} />}
-                {secondCenter && <ProductCard p={secondCenter} isFeature={true} />}
+                <div className="hidden md:block">
+                  {secondLeft && <ProductCard p={secondLeft} isFeature={true} />}
+                </div>
+                <div className="hidden md:block">
+                  {secondCenter && <ProductCard p={secondCenter} isFeature={true} />}
+                </div>
+                <div className="hidden md:block">
+                  {secondRight && <ProductCard p={secondRight} isFeature={true} />}
+                </div>
               </div>
             </div>
           </div>
