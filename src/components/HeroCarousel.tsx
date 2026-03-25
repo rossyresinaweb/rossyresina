@@ -48,8 +48,16 @@ export default function HeroCarousel({ remateProducts = [], topVisitedProducts =
     return unique;
   };
 
-  const candidates = makeUniqueProducts([...moldProducts, ...remateProducts]);
-  const selected = candidates.slice(0, 3);
+  const moldUnique = makeUniqueProducts(moldProducts);
+  let selected = moldUnique.slice(0, 3);
+
+  if (selected.length < 3) {
+    const remaining = makeUniqueProducts(remateProducts).filter((item) => {
+      const key = String(item?.code || item?._id || "").trim().toLowerCase();
+      return !selected.some((sel) => String(sel?.code || sel?._id || "").trim().toLowerCase() === key);
+    });
+    selected = [...selected, ...remaining.slice(0, 3 - selected.length)];
+  }
 
   const secondLeft = selected[0] || featured[0];
   const secondCenter = selected[1] || featured[1] || featured[0];
