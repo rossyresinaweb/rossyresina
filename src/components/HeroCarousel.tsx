@@ -6,10 +6,9 @@ import type { ProductProps } from "../../type";
 interface Props {
   remateProducts?: ProductProps[];
   topVisitedProducts?: ProductProps[];
-  moldProducts?: ProductProps[]; // nuevo
 }
 
-export default function HeroCarousel({ remateProducts = [], topVisitedProducts = [], moldProducts = [] }: Props) {
+export default function HeroCarousel({ remateProducts = [], topVisitedProducts = [] }: Props) {
   const [slideIndex, setSlideIndex] = useState(0);
   const [isAutoPlay, setIsAutoPlay] = useState(true);
   const totalSlides = 4;
@@ -28,57 +27,10 @@ export default function HeroCarousel({ remateProducts = [], topVisitedProducts =
   const leftProduct = featured[0];
   const rightTop = featured[1] || featured[0];
   const rightBottom = featured[2] || featured[1] || featured[0];
-
-  const filteredMoldProducts = moldProducts.length > 0
-    ? moldProducts
-    : remateProducts.filter((p) => {
-        const cat = String(p?.category || "").toLowerCase();
-        const title = String(p?.title || "").toLowerCase();
-        const code = String(p?.code || "").toLowerCase();
-        return cat.includes("molde") || title.includes("molde") || code.includes("mol_");
-      });
-
-  const makeUniqueProducts = (items: any[]) => {
-    const seen = new Set();
-    const unique: any[] = [];
-    for (const item of items) {
-      const key = String(item?.code || item?._id || "").trim().toLowerCase();
-      if (!key) continue;
-      if (seen.has(key)) continue;
-      seen.add(key);
-      unique.push(item);
-    }
-    return unique;
-  };
-
-  const moldUnique = makeUniqueProducts(filteredMoldProducts);
-  const [moldRotationIndex, setMoldRotationIndex] = useState(0);
-
-  useEffect(() => {
-    if (moldUnique.length <= 3) {
-      setMoldRotationIndex(0);
-      return;
-    }
-
-    const timer = setInterval(() => {
-      setMoldRotationIndex((prev) => (prev + 1) % moldUnique.length);
-    }, 8000); // 8 segundos cambia el set de moldes
-
-    return () => clearInterval(timer);
-  }, [moldUnique.length]);
-
-  const selected = (() => {
-    if (moldUnique.length === 0) return [];
-    if (moldUnique.length <= 3) return moldUnique;
-
-    const start = moldRotationIndex;
-    const wrapped = [...moldUnique, ...moldUnique];
-    return wrapped.slice(start, start + 3);
-  })();
-
-  const secondLeft = selected[0] || null;
-  const secondCenter = selected[1] || null;
-  const secondRight = selected[2] || null;
+  const nextFeatured = remateProducts.slice(3, 7);
+  const secondLeft = nextFeatured[0] || featured[0];
+  const secondCenter = nextFeatured[1] || featured[1] || featured[0];
+  const secondRight = nextFeatured[2] || featured[2] || featured[1] || featured[0];
   const thirdFeatured = (topVisitedProducts.length > 0 ? topVisitedProducts : remateProducts).slice(0, 5);
 
   const discountPercent = (() => {
@@ -108,7 +60,7 @@ export default function HeroCarousel({ remateProducts = [], topVisitedProducts =
         href={`/${p.code || p._id}`}
         className={`group relative overflow-hidden rounded-xl bg-white transition duration-300 hover:shadow-2xl ${isFeature ? 'shadow-2xl' : 'shadow-lg'}`}
       >
-        <div className={`relative overflow-hidden bg-gray-100 ${isFeature ? 'h-96' : 'h-72'}`}>
+        <div className={`relative overflow-hidden bg-gray-100 ${isFeature ? 'h-80' : 'h-48'}`}>
           {isReference ? (
             <div className="absolute inset-0 flex items-center justify-center text-sm font-semibold text-gray-400">
               Producto en carga
@@ -118,7 +70,7 @@ export default function HeroCarousel({ remateProducts = [], topVisitedProducts =
               src={src} 
               alt={p.title || "Producto"} 
               fill 
-              className="object-contain p-3 transition duration-300 group-hover:scale-105"
+              className="object-cover transition duration-300 group-hover:scale-110"
             />
           )}
           
@@ -264,17 +216,17 @@ export default function HeroCarousel({ remateProducts = [], topVisitedProducts =
           <div className="absolute inset-0 transition-opacity duration-1000 ease-in-out bg-gradient-to-br from-red-50 via-white to-orange-50">
             <div className="absolute top-20 right-10 h-96 w-96 rounded-full bg-red-200/30 blur-3xl" />
             
-            <div className="relative mx-auto h-full max-w-7xl px-4 py-4 md:px-6 md:py-6 flex items-center">
-              <div className="grid w-full grid-cols-1 gap-6 md:grid-cols-12 items-center">
+            <div className="relative mx-auto h-full max-w-7xl px-4 py-6 md:px-8 md:py-8 flex items-center">
+              <div className="grid w-full grid-cols-1 gap-8 md:grid-cols-3 items-center">
                 {/* Producto izquierda */}
                 {leftProduct && !isReferenceProductImage(leftProduct) && (
-                  <div className="hidden md:flex col-span-12 md:col-span-3 justify-center">
-                    <div className="relative w-full max-w-[240px]">
-                      <div className="rounded-xl overflow-hidden border border-gray-200 shadow-md">
+                  <div className="hidden md:flex justify-end">
+                    <div className="relative">
+                      <div className="rounded-2xl overflow-hidden shadow-2xl">
                         <ProductCard p={leftProduct} isFeature={true} />
                       </div>
                       {discountPercent !== null && (
-                        <div className="absolute -bottom-3 -right-3 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-red-500 to-red-600 text-xl font-extrabold text-white shadow-lg border-4 border-white">
+                        <div className="absolute -bottom-4 -right-4 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-red-500 to-red-600 text-2xl font-extrabold text-white shadow-lg border-4 border-white">
                           -{discountPercent}%
                         </div>
                       )}
@@ -283,7 +235,8 @@ export default function HeroCarousel({ remateProducts = [], topVisitedProducts =
                 )}
 
                 {/* Centro - Contenido principal */}
-                <div className="col-span-12 md:col-span-6 z-10 text-center">                  <div className="inline-flex items-center rounded-full bg-red-100 px-4 py-1.5 text-xs md:text-sm font-bold text-red-700 uppercase tracking-wider mb-3">
+                <div className="z-10 text-center">
+                  <div className="inline-flex items-center rounded-full bg-red-100 px-4 py-1.5 text-xs md:text-sm font-bold text-red-700 uppercase tracking-wider mb-3">
                     🔥 OFERTAS Limitadas
                   </div>
                   
@@ -313,13 +266,9 @@ export default function HeroCarousel({ remateProducts = [], topVisitedProducts =
                 </div>
 
                 {/* Productos derecha */}
-                <div className="hidden md:flex col-span-12 md:col-span-3 flex-col gap-4 justify-center items-center">
-                  <div className="w-full max-w-[240px]">
-                    {rightTop && <ProductCard p={rightTop} />}
-                  </div>
-                  <div className="w-full max-w-[240px]">
-                    {rightBottom && <ProductCard p={rightBottom} />}
-                  </div>
+                <div className="hidden md:flex flex-col gap-3 justify-center">
+                  {rightTop && <ProductCard p={rightTop} />}
+                  {rightBottom && <ProductCard p={rightBottom} />}
                 </div>
               </div>
             </div>
@@ -330,40 +279,37 @@ export default function HeroCarousel({ remateProducts = [], topVisitedProducts =
           <div className="absolute inset-0 transition-opacity duration-1000 ease-in-out bg-gradient-to-br from-amber-50 via-white to-yellow-50">
             <div className="absolute -top-40 -left-40 h-96 w-96 rounded-full bg-yellow-300/20 blur-3xl" />
             
-            <div className="relative mx-auto h-full max-w-7xl px-4 py-4 md:px-6 md:py-6 flex items-center">
-              <div className="grid w-full grid-cols-1 gap-6 md:grid-cols-12 items-center">
-                <div className="col-span-12 md:col-span-5">
-                  <div className="inline-flex items-center rounded-full bg-amber-100 px-4 py-1.5 text-xs md:text-sm font-bold text-amber-700 uppercase tracking-wider mb-2">
+            <div className="relative mx-auto h-full max-w-7xl px-4 py-6 md:px-8 md:py-8 flex items-center">
+              <div className="grid w-full grid-cols-1 gap-6 md:grid-cols-3 items-center">
+                <div className="z-10">
+                  <div className="inline-flex items-center rounded-full bg-amber-100 px-4 py-1.5 text-xs md:text-sm font-bold text-amber-700 uppercase tracking-wider mb-3">
                     🎨 Moldes profesionales
                   </div>
-
-                  <h2 className="text-2xl md:text-4xl font-black text-gray-900 leading-tight">
+                  
+                  <h2 className="text-3xl md:text-5xl lg:text-6xl font-black text-gray-900 leading-tight">
                     Moldes de <span className="text-amber-600">Silicona</span>
                   </h2>
-
-                  <p className="mt-3 text-sm md:text-base text-gray-700 font-semibold">
+                  
+                  <p className="mt-3 text-base md:text-lg text-gray-700 font-semibold">
                     Crea piezas únicas y acelera tu producción
                   </p>
-
-                  <ul className="mt-4 space-y-1 text-xs md:text-sm text-gray-600">
-                    <li className="flex items-center gap-2"><span className="text-amber-600">✓</span> Silicona flexible premium</li>
-                    <li className="flex items-center gap-2"><span className="text-amber-600">✓</span> Desmolde fácil y seguro</li>
-                    <li className="flex items-center gap-2"><span className="text-amber-600">✓</span> Acabado profesional</li>
-                  </ul>
-
+                  
+                  <div className="mt-4 space-y-2 text-sm md:text-base text-gray-600">
+                    <p className="flex items-center gap-2"><span className="text-amber-600">✓</span> Silicona flexible premium</p>
+                    <p className="flex items-center gap-2"><span className="text-amber-600">✓</span> Desmolde fácil y seguro</p>
+                    <p className="flex items-center gap-2"><span className="text-amber-600">✓</span> Acabado profesional</p>
+                  </div>
+                  
                   <Link
                     href="/search?q=molde"
-                    className="mt-4 inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-500 px-5 py-2 font-bold text-gray-900 transition duration-300 hover:shadow-lg hover:scale-105"
+                    className="mt-5 inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-500 px-6 py-3 font-bold text-gray-900 transition duration-300 hover:shadow-lg hover:scale-105"
                   >
                     🔍 Explorar moldes
                   </Link>
                 </div>
 
-                <div className="col-span-12 md:col-span-7 grid grid-cols-1 gap-4 md:grid-cols-3">
-                  {secondLeft && <ProductCard p={secondLeft} isFeature={true} />}
-                  {secondCenter && <ProductCard p={secondCenter} isFeature={true} />}
-                  {secondRight && <ProductCard p={secondRight} isFeature={true} />}
-                </div>
+                {secondLeft && <ProductCard p={secondLeft} isFeature={true} />}
+                {secondCenter && <ProductCard p={secondCenter} isFeature={true} />}
               </div>
             </div>
           </div>
