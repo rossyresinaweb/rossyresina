@@ -108,7 +108,7 @@ export default function HeroCarousel({ remateProducts = [], topVisitedProducts =
         href={`/${p.code || p._id}`}
         className={`group relative overflow-hidden rounded-xl bg-white transition duration-300 hover:shadow-2xl ${isFeature ? 'shadow-2xl' : 'shadow-lg'}`}
       >
-        <div className={`relative overflow-hidden bg-gray-100 ${isFeature ? 'h-80' : 'h-48'}`}>
+        <div className={`relative overflow-hidden bg-gray-100 ${isFeature ? 'h-80 md:h-96' : 'h-56 md:h-64'}`}>
           {isReference ? (
             <div className="absolute inset-0 flex items-center justify-center text-sm font-semibold text-gray-400">
               Producto en carga
@@ -118,7 +118,7 @@ export default function HeroCarousel({ remateProducts = [], topVisitedProducts =
               src={src} 
               alt={p.title || "Producto"} 
               fill 
-              className="object-cover transition duration-300 group-hover:scale-110"
+              className="object-contain p-2 transition duration-300 group-hover:scale-105"
             />
           )}
           
