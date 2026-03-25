@@ -41,6 +41,7 @@ export default function EditProduct() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [saveOk, setSaveOk] = useState("");
+  const [categories, setCategories] = useState<Array<{ _id: number; name: string; slug: string }>>([]);
 
   const galleryImages = useMemo(() => normalizeUrls(form?.images), [form?.images]);
   const mainImagePreview = String(form?.image || galleryImages[0] || "").trim();
@@ -68,6 +69,20 @@ export default function EditProduct() {
     };
     load();
   }, [id]);
+
+  // Cargar categorías
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const res = await fetch("/api/categories");
+        const data = await res.json();
+        setCategories(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("Error cargando categorías", err);
+      }
+    };
+    loadCategories();
+  }, []);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -222,11 +237,18 @@ export default function EditProduct() {
 
             <label className="grid gap-1">
               <span className="text-sm text-gray-700">Categoría</span>
-              <input
+              <select
                 className="rounded-md border border-gray-300 px-3 py-2"
                 value={form.category || ""}
                 onChange={(e) => setForm({ ...form, category: e.target.value })}
-              />
+              >
+                <option value="">-- Selecciona una categoría --</option>
+                {categories.map((cat) => (
+                  <option key={cat._id} value={cat.name}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
             </label>
 
             <label className="grid gap-1 md:col-span-2">

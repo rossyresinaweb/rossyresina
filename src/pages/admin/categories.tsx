@@ -16,6 +16,14 @@ export default function AdminCategoriesPage() {
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
 
+  // Categorías por defecto para precarga
+  const defaultCategories = [
+    { name: "Moldes de silicona", slug: "moldes-de-silicona" },
+    { name: "Pigmentos y glitters", slug: "pigmentos-y-glitters" },
+    { name: "Accesorios", slug: "accesorios" },
+    { name: "Kits resineros", slug: "kits-resineros" },
+  ];
+
   const load = async () => {
     const res = await fetch("/api/categories");
     const data = await res.json();
@@ -24,6 +32,29 @@ export default function AdminCategoriesPage() {
 
   useEffect(() => {
     load();
+  }, []);
+
+  // Cargar categorías por defecto si no existen
+  useEffect(() => {
+    const initDefaults = async () => {
+      if (items.length === 0) {
+        // No hacer nada si ya hay categorías
+        const res = await fetch("/api/categories");
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) return;
+        
+        // Si no hay categorías, crear las por defecto
+        for (const cat of defaultCategories) {
+          await fetch("/api/categories", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(cat),
+          });
+        }
+        load();
+      }
+    };
+    initDefaults();
   }, []);
 
   const create = async () => {
