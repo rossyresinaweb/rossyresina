@@ -52,10 +52,29 @@ export default function HeroCarousel({ remateProducts = [], topVisitedProducts =
   };
 
   const moldUnique = makeUniqueProducts(filteredMoldProducts);
-  let selected = moldUnique.slice(0, 3);
+  const [moldRotationIndex, setMoldRotationIndex] = useState(0);
 
-  // No fallback a productos no-molde para evitar pigmentos/figuras en la sección de moldes.
-  // Si hay menos de 3 moldes, mostraremos sólo los disponibles.
+  useEffect(() => {
+    if (moldUnique.length <= 3) {
+      setMoldRotationIndex(0);
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setMoldRotationIndex((prev) => (prev + 1) % moldUnique.length);
+    }, 8000); // 8 segundos cambia el set de moldes
+
+    return () => clearInterval(timer);
+  }, [moldUnique.length]);
+
+  const selected = (() => {
+    if (moldUnique.length === 0) return [];
+    if (moldUnique.length <= 3) return moldUnique;
+
+    const start = moldRotationIndex;
+    const wrapped = [...moldUnique, ...moldUnique];
+    return wrapped.slice(start, start + 3);
+  })();
 
   const secondLeft = selected[0] || null;
   const secondCenter = selected[1] || null;
