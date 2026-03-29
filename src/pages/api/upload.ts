@@ -13,7 +13,7 @@ cloudinary.config({
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    if (req.method !== "POST") return res.status(405).json({ error: "M?todo no permitido" });
+    if (req.method !== "POST") return res.status(405).json({ error: "Método no permitido" });
     const session = (await getServerSession(req, res, authOptions as any)) as Session | null;
     if (!session || (session.user as any)?.role !== "ADMIN") {
       return res.status(401).json({ error: "No autorizado" });

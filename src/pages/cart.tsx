@@ -78,15 +78,15 @@ const CartPage = () => {
                   <span className="text-sm text-gray-500">{cartItems.length} articulo(s)</span>
                 </div>
                 <p className="mt-2 text-xs text-gray-500">
-                  Tu carrito queda guardado autom?ticamente en este dispositivo.
+                  Tu carrito queda guardado automáticamente en este dispositivo.
                 </p>
                 <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
                   {freeShippingGap > 0 ? (
                     <span>
-                      Agrega <strong>S/ {freeShippingGap.toFixed(2)}</strong> para env?o gratis.
+                      Agrega <strong>S/ {freeShippingGap.toFixed(2)}</strong> para envío gratis.
                     </span>
                   ) : (
-                    <span>Env?o gratis aplicado a tu pedido.</span>
+                    <span>Envío gratis aplicado a tu pedido.</span>
                   )}
                   <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-emerald-100">
                     <div
@@ -151,7 +151,7 @@ const CartPage = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                    Env?os a todo Per?
+                    Envíos a todo Perú
                   </div>
                 </div>
               </div>
@@ -166,7 +166,7 @@ const CartPage = () => {
                 gridClass="grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4"
               />
             ) : (
-              <p className="text-sm text-gray-600">A?n no hay productos para recomendar.</p>
+              <p className="text-sm text-gray-600">Aún no hay productos para recomendar.</p>
             )}
           </section>
         </>

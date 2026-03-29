@@ -6,7 +6,7 @@ import type { ProductProps } from "../../type";
 import FormattedPrice from "@/components/FormattedPrice";
 import { useSession } from "next-auth/react";
 
-const statusTabs = ["Ver todo", "Pendiente por confirmar", "Confirmado", "En proceso de env?o", "Enviado"] as const;
+const statusTabs = ["Ver todo", "Pendiente por confirmar", "Confirmado", "En proceso de envío", "Enviado"] as const;
 
 type TabKey = (typeof statusTabs)[number];
 
@@ -86,7 +86,7 @@ export default function TrackOrdersPage() {
     const base: Record<string, number> = {
       "Pendiente por confirmar": 0,
       Confirmado: 0,
-      "En proceso de env?o": 0,
+      "En proceso de envío": 0,
       Enviado: 0,
     };
     orders.forEach((o) => {
@@ -154,7 +154,7 @@ export default function TrackOrdersPage() {
               <span className="px-2 py-1 rounded hover:bg-gray-50">Reembolsos y devoluciones</span>
               <span className="px-2 py-1 rounded hover:bg-gray-50">Valoraciones</span>
               <span className="px-2 py-1 rounded hover:bg-gray-50">Ajustes</span>
-              <span className="px-2 py-1 rounded hover:bg-gray-50">Direcci?n de env?o</span>
+              <span className="px-2 py-1 rounded hover:bg-gray-50">Dirección de envío</span>
               <Link href="/messages" className="px-2 py-1 rounded hover:bg-gray-50">Centro de mensajes</Link>
             </nav>
           </aside>
@@ -181,7 +181,7 @@ export default function TrackOrdersPage() {
                 <input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="N? de pedido o art?culo"
+                  placeholder="Nº de pedido o artículo"
                   className="h-11 rounded-md border border-gray-300 px-3 text-sm outline-none focus:border-orange-400"
                 />
                 <div className="flex items-center gap-2">
@@ -216,12 +216,12 @@ export default function TrackOrdersPage() {
                     </div>
                     {normalizeStatus(o.status) === normalizeStatus("Confirmado") && (
                       <div className="mt-2 text-sm text-emerald-700">
-                        Pedido confirmado. En proceso de env?o. Comun?cate al 961770723 para seguimiento.
+                        Pedido confirmado. En proceso de envío. Comunícate al 961770723 para seguimiento.
                       </div>
                     )}
                     {normalizeStatus(o.status) === normalizeStatus("En proceso de env?o") && (
                       <div className="mt-2 text-sm text-emerald-700">
-                        En proceso de env?o. Comun?cate al 961770723 para seguimiento.
+                        En proceso de envío. Comunícate al 961770723 para seguimiento.
                       </div>
                     )}
                     {o.status === "Enviado" && (
@@ -233,7 +233,7 @@ export default function TrackOrdersPage() {
                         {o.shippingCarrier === "SHALOM" && o.shalomVoucherImage && (
                           <p>
                             <a href={o.shalomVoucherImage} target="_blank" rel="noreferrer" className="text-amazon_blue hover:underline">
-                              Ver voucher de env?o
+                              Ver voucher de envío
                             </a>
                           </p>
                         )}
@@ -279,7 +279,7 @@ export default function TrackOrdersPage() {
               </div>
             ) : (
               <div className="bg-white border border-gray-200 rounded-xl p-6">
-                <h2 className="text-lg font-semibold text-gray-900">A?n no has realizado pedidos</h2>
+                <h2 className="text-lg font-semibold text-gray-900">Aún no has realizado pedidos</h2>
                 <p className="text-sm text-gray-600 mt-1">
                   Explora nuestros productos y encuentra algo especial para ti.
                 </p>

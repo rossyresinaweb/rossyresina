@@ -53,7 +53,7 @@ export function resolveWindowDates(preset: VisitWindowPreset): { start: Date | n
   if (preset === "all") return { start: null, end, label: "Todo el historial" };
   const days = WINDOW_DAYS[preset];
   const start = new Date(end.getTime() - days * 24 * 60 * 60 * 1000);
-  return { start, end, label: `?ltimos ${days} d?as` };
+  return { start, end, label: `Últimos ${days} días` };
 }
 
 export async function recordVisitDb(input: {

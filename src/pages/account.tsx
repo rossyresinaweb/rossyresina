@@ -30,7 +30,7 @@ export default function AccountPage() {
             <span className="px-2 py-1 rounded hover:bg-gray-50">Reembolsos y devoluciones</span>
             <span className="px-2 py-1 rounded hover:bg-gray-50">Valoraciones</span>
             <span className="px-2 py-1 rounded hover:bg-gray-50">Ajustes</span>
-            <span className="px-2 py-1 rounded hover:bg-gray-50">Direcci?n de env?o</span>
+            <span className="px-2 py-1 rounded hover:bg-gray-50">Dirección de envío</span>
             <Link href="/messages" className="px-2 py-1 rounded hover:bg-gray-50">Centro de mensajes</Link>
           </nav>
         </aside>
@@ -54,7 +54,7 @@ export default function AccountPage() {
               <div className="border border-gray-200 rounded-lg p-4 text-center">Lista de deseos</div>
               <div className="border border-gray-200 rounded-lg p-4 text-center">Visitas</div>
               <div className="border border-gray-200 rounded-lg p-4 text-center">Cupones</div>
-              <div className="border border-gray-200 rounded-lg p-4 text-center">Cr?ditos</div>
+              <div className="border border-gray-200 rounded-lg p-4 text-center">Créditos</div>
             </div>
             <div className="mt-4">
               <button
@@ -62,7 +62,7 @@ export default function AccountPage() {
                 onClick={handleSignOut}
                 className="text-sm text-amazon_blue hover:underline"
               >
-                Cerrar sesi?n
+                Cerrar sesión
               </button>
             </div>
           </div>
@@ -76,7 +76,7 @@ export default function AccountPage() {
             </div>
             <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div className="border border-gray-200 rounded-lg p-4 text-center">Pendientes de pago</div>
-              <div className="border border-gray-200 rounded-lg p-4 text-center">Pendientes de env?o</div>
+              <div className="border border-gray-200 rounded-lg p-4 text-center">Pendientes de envío</div>
               <div className="border border-gray-200 rounded-lg p-4 text-center">Enviados</div>
               <div className="border border-gray-200 rounded-lg p-4 text-center">Pendientes</div>
             </div>

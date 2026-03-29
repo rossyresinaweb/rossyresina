@@ -17,7 +17,7 @@ const toDbStatus = (status: string): DbOrderStatus | null => {
   if (!s) return null;
   if (s === "pending" || s === "pendiente por confirmar") return "PENDING";
   if (s === "paid" || s === "confirmado") return "PAID";
-  if (s === "shipped" || s === "en proceso de env?o" || s === "enviado" || s === "finalizado") {
+  if (s === "shipped" || s === "en proceso de envío" || s === "enviado" || s === "finalizado") {
     return "SHIPPED";
   }
   return null;
@@ -131,5 +131,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
   }
 
-  return res.status(405).json({ error: "M?todo no permitido" });
+  return res.status(405).json({ error: "Método no permitido" });
 }

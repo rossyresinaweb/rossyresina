@@ -22,13 +22,13 @@ export function sanitizeHumanText(input: string): string {
   }
 
   const dictionary: Array<[string, string]> = [
-    ["quincea?era", "quincea\u00f1era"],
-    ["cari?osito", "cari\u00f1osito"],
-    ["coraz?n", "coraz\u00f3n"],
-    ["se?orita", "se\u00f1orita"],
-    ["rese?as", "rese\u00f1as"],
-    ["rese?a", "rese\u00f1a"],
-    ["rese?as", "rese\u00f1as"],
+    ["quinceañera", "quincea\u00f1era"],
+    ["cariñosito", "cari\u00f1osito"],
+    ["corazón", "coraz\u00f3n"],
+    ["señorita", "se\u00f1orita"],
+    ["reseñas", "rese\u00f1as"],
+    ["reseña", "rese\u00f1a"],
+    ["reseñas", "rese\u00f1as"],
   ];
 
   for (const [wrong, right] of dictionary) {

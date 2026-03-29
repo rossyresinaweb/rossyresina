@@ -4,28 +4,28 @@ import { useState } from "react";
 
 const data = [
   {
-    q: "Cules son los medios de pago?",
-    a: "Aceptamos Yape y transferencia bancaria. Al finalizar tu compra en Checkout podrs elegir el mtodo y confirmar por WhatsApp."
+    q: "Cuáles son los medios de pago?",
+    a: "Aceptamos Yape y transferencia bancaria. Al finalizar tu compra en Checkout podrás elegir el método y confirmar por WhatsApp."
   },
   {
-    q: "Hacen env?os?",
-    a: "S, enviamos a todo el Per. El env?o es gratis en pedidos desde S/ 120. En compras menores el costo de env?o es desde S/ 10."
+    q: "Hacen envíos?",
+    a: "Sí, enviamos a todo el Perú. El envío es gratis en pedidos desde S/ 120. En compras menores el costo de envío es desde S/ 10."
   },
   {
-    q: "Cmo elijo la resina adecuada?",
-    a: "Para joyera y piezas pequeas recomendamos resina epoxi 1:1. Para recubrimientos y mayor dureza, epoxi estndar con catalizador."
+    q: "Cómo elijo la resina adecuada?",
+    a: "Para joyería y piezas pequeñas recomendamos resina epoxi 1:1. Para recubrimientos y mayor dureza, epoxi estándar con catalizador."
   },
   {
-    q: "Qu incluye un kit de resina?",
-    a: "Incluye resina, catalizador, instrucciones bsicas, y puede agregar pigmentos o moldes segn tu eleccin."
+    q: "Qué incluye un kit de resina?",
+    a: "Incluye resina, catalizador, instrucciones básicas, y puede agregar pigmentos o moldes según tu elección."
   },
   {
     q: "Aceptan devoluciones?",
-    a: "Aceptamos devoluciones dentro de 7 das si el producto est sellado y en perfectas condiciones. Contctanos para coordinar."
+    a: "Aceptamos devoluciones dentro de 7 días si el producto está sellado y en perfectas condiciones. Contáctanos para coordinar."
   },
   {
     q: "Puedo recoger en tienda?",
-    a: "S, podemos coordinar recojo en Lima previa confirmacin por WhatsApp."
+    a: "Sí, podemos coordinar recojo en Lima previa confirmación por WhatsApp."
   }
 ];
 
@@ -56,7 +56,7 @@ export default function FAQPage() {
       </div>
 
       <div className="mt-6 text-sm text-gray-700">
-        <p>No encontraste tu respuesta? Escrbenos por <Link href="/contact" className="text-amazon_blue hover:underline">Contacto</Link> o confirma por WhatsApp desde el Checkout.</p>
+        <p>No encontraste tu respuesta? Eschíbenos por <Link href="/contact" className="text-amazon_blue hover:underline">Contacto</Link> o confirma por WhatsApp desde el Checkout.</p>
       </div>
     </div>
   );

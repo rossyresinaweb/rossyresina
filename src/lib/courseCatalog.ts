@@ -24,7 +24,7 @@ export const courseCatalog: CourseItem[] = [];
 export const getCourseAvailability = (course: CourseItem) => {
   const remaining = Math.max(0, course.totalSeats - course.soldSeats);
   if (remaining === 0) return { label: "Agotado", tone: "soldout" as const };
-  if (remaining <= 6) return { label: "?ltimas vacantes", tone: "warning" as const };
+  if (remaining <= 6) return { label: "Últimas vacantes", tone: "warning" as const };
   return { label: "Disponible", tone: "available" as const };
 };
 
