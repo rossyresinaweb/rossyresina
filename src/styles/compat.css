@@ -1,0 +1,46 @@
+/* rateit */
+.rateit { position: relative; display: inline-block; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
+.rateit .rateit-range { position: relative; display: inline-block; height: var(--rate-size, 20px); width: calc(var(--rate-size, 20px) * 5); outline: none; }
+.rateit .rateit-range::before { content: ""; position: absolute; inset: 0; background-repeat: repeat-x; background-size: var(--rate-size, 20px) var(--rate-size, 20px); background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23d1d5db' d='M12 2l2.9 6.9 7.1.6-5.3 4.6 1.8 7-6.5-3.9-6.5 3.9 1.8-7L2 9.5l7.1-.6L12 2z'/></svg>"); }
+.rateit .rateit-selected, .rateit .rateit-hover { position: absolute; left: 0; top: 0; height: 100%; pointer-events: none; }
+.rateit .rateit-selected::before { content: ""; position: absolute; inset: 0; background-repeat: repeat-x; background-size: var(--rate-size, 20px) var(--rate-size, 20px); background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23131921' d='M12 2l2.9 6.9 7.1.6-5.3 4.6 1.8 7-6.5-3.9-6.5 3.9 1.8-7L2 9.5l7.1-.6L12 2z'/></svg>"); }
+.rateit .rateit-hover::before { content: ""; position: absolute; inset: 0; background-repeat: repeat-x; background-size: var(--rate-size, 20px) var(--rate-size, 20px); background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23f59e0b' d='M12 2l2.9 6.9 7.1.6-5.3 4.6 1.8 7-6.5-3.9-6.5 3.9 1.8-7L2 9.5l7.1-.6L12 2z'/></svg>"); }
+.rateit .rateit-selected-rtl, .rateit .rateit-hover-rtl { left: auto; right: 0; }
+.rateit-small .rateit-range { height: var(--rate-size, 16px); width: calc(var(--rate-size, 16px) * 5); }
+.rateit button.rateit-reset { width: var(--rate-size, 20px); height: var(--rate-size, 20px); display: inline-block; border: none; outline: none; padding: 0; margin-left: 6px; border-radius: 50%; background-color: #e5e7eb; position: relative; }
+.rateit button.rateit-reset::before { content: ""; position: absolute; left: 50%; top: 50%; width: 50%; height: 2px; background-color: #6b7280; transform: translate(-50%, -50%) rotate(45deg); }
+.rateit button.rateit-reset::after { content: ""; position: absolute; left: 50%; top: 50%; width: 50%; height: 2px; background-color: #6b7280; transform: translate(-50%, -50%) rotate(-45deg); }
+
+/* Font Awesome aliases */
+.fa { display: inline-block; line-height: 1; }
+.fa-lg { font-size: 1.333em; line-height: .75em; vertical-align: -15%; }
+.fa-2x { font-size: 2em; }
+.fa-3x { font-size: 3em; }
+.fa-4x { font-size: 4em; }
+.fa-5x { font-size: 5em; }
+.fa-stack { position: relative; display: inline-block; width: 2em; height: 2em; line-height: 2em; vertical-align: middle; }
+.fa-stack-1x, .fa-stack-2x { position: absolute; left: 0; width: 100%; text-align: center; }
+.fa-stack-2x { font-size: 2em; }
+.fa-inverse { color: #fff; }
+
+/* Lightbox */
+.lightboxOverlay { position: fixed; inset: 0; background-color: #000; opacity: .6; z-index: 50; display: none; }
+.lightbox { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 60; }
+.lb-outerContainer { background: #fff; border-radius: .5rem; max-width: 90vw; max-height: 90vh; }
+.lb-container { padding: .5rem; }
+.lb-image { display: block; max-width: 100%; height: auto; border-radius: .25rem; }
+.lb-nav { position: absolute; inset: 0; }
+.lb-prev, .lb-next { height: 100%; display: block; cursor: pointer; }
+.lb-close { position: absolute; top: .5rem; right: .5rem; width: 30px; height: 30px; border-radius: .375rem; background-color: #0003; }
+
+/* Owl Carousel */
+.owl-carousel { position: relative; width: 100%; }
+.owl-carousel .owl-wrapper-outer { overflow: hidden; position: relative; width: 100%; }
+.owl-carousel .owl-item { float: left; }
+.owl-controls { user-select: none; -webkit-tap-highlight-color: transparent; }
+.owl-controls .owl-buttons div { cursor: pointer; }
+.owl-prev, .owl-next { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: .375rem; background-color: #e5e7eb; color: #374151; }
+.owl-prev:hover, .owl-next:hover { background-color: #d1d5db; }
+
+.grab { cursor: grab; cursor: -webkit-grab; }
+.grabbing { cursor: grabbing; cursor: -webkit-grabbing; }

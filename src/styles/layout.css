@@ -1,0 +1,67 @@
+:root { --rr-container: 1280px; }
+
+.container { max-width: var(--rr-container); margin-left: auto; margin-right: auto; padding-left: 1rem; padding-right: 1rem; }
+
+.row { display: flex; flex-wrap: wrap; margin-left: -.5rem; margin-right: -.5rem; }
+[class^="col-"], [class*=" col-"] { padding-left: .5rem; padding-right: .5rem; }
+
+.col-xs-12 { width: 100%; }
+.col-xs-8 { width: 66.6667%; }
+.col-xs-7 { width: 58.3333%; }
+.col-xs-6 { width: 50%; }
+.col-xs-4 { width: 33.3333%; }
+.col-xs-3 { width: 25%; }
+.col-xs-2 { width: 16.6667%; }
+
+@media (min-width: 640px) {
+  .col-sm-12 { width: 100%; }
+  .col-sm-8 { width: 66.6667%; }
+  .col-sm-6 { width: 50%; }
+  .col-sm-4 { width: 33.3333%; }
+  .col-sm-3 { width: 25%; }
+  .hidden-sm { display: none; }
+}
+
+@media (min-width: 768px) {
+  .col-md-12 { width: 100%; }
+  .col-md-8 { width: 66.6667%; }
+  .col-md-7 { width: 58.3333%; }
+  .col-md-6 { width: 50%; }
+  .col-md-4 { width: 33.3333%; }
+  .col-md-3 { width: 25%; }
+  .col-md-2 { width: 16.6667%; }
+}
+
+@media (min-width: 1024px) {
+  .col-lg-12 { width: 100%; }
+  .col-lg-8 { width: 66.6667%; }
+  .col-lg-7 { width: 58.3333%; }
+  .col-lg-6 { width: 50%; }
+  .col-lg-4 { width: 33.3333%; }
+  .col-lg-3 { width: 25%; }
+  .col-lg-2 { width: 16.6667%; }
+}
+
+.list-inline { list-style: none; padding-left: 0; margin-left: -.5rem; }
+.list-inline > li { display: inline-block; margin-left: .5rem; margin-right: .5rem; }
+
+.inline { display: inline-block; vertical-align: top; }
+.center-block { float: none; }
+
+.inner { padding-top: 120px; padding-bottom: 120px; }
+.inner-md { padding-top: 100px; padding-bottom: 100px; }
+.inner-sm { padding-top: 80px; padding-bottom: 80px; }
+.inner-xs { padding-top: 40px; padding-bottom: 40px; }
+.inner-vs { padding-top: 30px; padding-bottom: 30px; }
+.inner-top { padding-top: 120px; }
+.inner-top-md { padding-top: 100px; }
+.inner-top-sm { padding-top: 80px; }
+.inner-top-xs { padding-top: 40px; }
+.inner-top-vs { padding-top: 30px; }
+
+.m-t-5 { margin-top: 5px; }
+.m-t-10 { margin-top: 10px; }
+.m-t-15 { margin-top: 15px; }
+.m-t-20 { margin-top: 20px; }
+.m-t-25 { margin-top: 25px; }
+.m-t-30 { margin-top: 30px; }

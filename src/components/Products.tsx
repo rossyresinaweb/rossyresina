@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { ProductProps } from "../../type";
-import { HiCheck, HiShoppingCart } from "react-icons/hi";
-import { FaStar } from "react-icons/fa";
+import { CheckIcon, ShoppingCartIcon } from "@heroicons/react/24/outline";
+import { StarIcon } from "@heroicons/react/24/solid";
 import { useDispatch } from "react-redux";
 import { addToCart } from "@/store/nextSlice";
 import Link from "next/link";
@@ -151,10 +151,10 @@ const Products = ({
           return (
             <div
               key={_id}
-              className="snap-start flex h-full flex-col rounded-xl border border-gray-200 bg-white p-2.5 text-black transition-colors hover:border-gray-300"
+              className="snap-start flex h-full flex-col rounded-xl border border-gray-200 bg-white p-2.5 text-black transition-all duration-300 hover:border-gray-300 hover:shadow-lg hover:-translate-y-1 group"
             >
               <Link href={href} className="block">
-                <div className="relative w-full overflow-hidden rounded-lg bg-white pb-[100%]">
+                <div className="relative w-full overflow-hidden rounded-lg bg-white pb-[100%] group-hover:bg-gray-50 transition-colors duration-300">
                   {(() => {
                     const imgSrc = normImg(displayImage);
                     const isPlaceholder = isProcessImage(displayImage);
@@ -171,19 +171,19 @@ const Products = ({
                         alt={displayTitle}
                         fill
                         sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
-                        className="object-cover"
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                     );
                   })()}
 
-                  <div className="pointer-events-none absolute left-2 top-2 flex flex-wrap gap-1">
+                  <div className="pointer-events-none absolute left-2 top-2 flex flex-wrap gap-1 z-10">
                     {isNew ? (
-                      <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-semibold uppercase text-white">
+                      <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-semibold uppercase text-white shadow-md">
                         Nuevo
                       </span>
                     ) : null}
                     {hasDiscount ? (
-                      <span className="rounded-full bg-rose-600 px-2 py-0.5 text-[10px] font-semibold uppercase text-white">
+                      <span className="rounded-full bg-rose-600 px-2 py-0.5 text-[10px] font-semibold uppercase text-white shadow-md">
                         Oferta
                       </span>
                     ) : null}
@@ -192,8 +192,8 @@ const Products = ({
               </Link>
 
               <div className="mt-2 flex flex-1 flex-col">
-                <Link href={href} className="block">
-                  <p className="line-clamp-2 overflow-hidden text-sm font-medium leading-[1.15rem] text-gray-800">
+                <Link href={href} className="block group">
+                  <p className="line-clamp-2 overflow-hidden text-sm font-medium leading-[1.15rem] text-gray-800 group-hover:text-amazon_blue transition-colors duration-200">
                     {displayTitle}
                   </p>
                 </Link>
@@ -203,6 +203,7 @@ const Products = ({
                     <span className="text-base font-semibold text-gray-900 md:text-xl">
                       <FormattedPrice amount={price} />
                     </span>
+                    <span className="text-xs text-gray-500 md:text-sm">c/unidad</span>
                     {hasDiscount ? (
                       <span className="text-xs text-gray-400 line-through md:text-sm">
                         <FormattedPrice amount={oldPrice as number} />
@@ -222,10 +223,10 @@ const Products = ({
 
                 <div className="mt-2 flex items-center gap-0.5 text-xs text-gray-900">
                   {[0, 1, 2, 3, 4].map((i) => (
-                    <FaStar
+                    <StarIcon
                       key={i}
                       className={`h-3.5 w-3.5 ${
-                        i < Math.round(itemStats.avgRating) ? "text-amber-500" : "text-gray-300"
+                        i < Math.round(itemStats.avgRating) ? "text-amber-500" : "text-gray-200"
                       }`}
                     />
                   ))}
@@ -250,14 +251,14 @@ const Products = ({
                     showAddedFeedback(_id);
                   }}
                   className={
-                    "mt-3 flex h-9 w-full items-center justify-center gap-1 rounded-full border text-xs font-semibold duration-200 " +
+                    "mt-3 flex h-9 w-full items-center justify-center gap-1 rounded-full border text-xs font-semibold duration-300 transition-all " +
                     (wasAdded
-                      ? "border-emerald-500 bg-emerald-50 text-emerald-700"
-                      : "border-gray-300 hover:bg-gray-50")
+                      ? "border-emerald-500 bg-emerald-50 text-emerald-700 shadow-md"
+                      : "border-gray-300 hover:border-amazon_blue hover:bg-amazon_blue hover:text-white hover:shadow-md")
                   }
                   aria-label="Agregar al carrito"
                 >
-                  {wasAdded ? <HiCheck className="h-4 w-4" /> : <HiShoppingCart className="h-4 w-4" />}
+                  {wasAdded ? <CheckIcon className="h-4 w-4" /> : <ShoppingCartIcon className="h-4 w-4" />}
                   {wasAdded ? "Producto añadido" : "Agregar"}
                 </button>
               </div>

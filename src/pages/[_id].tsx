@@ -440,8 +440,9 @@ const DynamicPage = ({ product, recs }: Props) => {
                     ))}
                     <span className="ml-1 text-sm text-gray-700">{reviewAverage.toFixed(1)} ({reviewCount})</span>
                   </div>
-                  <div className="mt-2 text-3xl leading-none font-semibold text-gray-900">
+                  <div className="mt-2 flex items-center gap-2 text-3xl leading-none font-semibold text-gray-900">
                     <FormattedPrice amount={Number(product.price) || 0} />
+                    <span className="text-sm font-normal text-gray-500">c/unidad</span>
                   </div>
                   <p className="mt-2 text-sm text-gray-700">{"Entrega entre 2 a 3 días aproximadamente"}</p>
                   <p className="text-sm text-gray-500">{"Se envía a Perú"}</p>
@@ -656,6 +657,7 @@ const DynamicPage = ({ product, recs }: Props) => {
                   <span className="text-2xl font-semibold text-gray-900">
                     <FormattedPrice amount={Number(product.price) || 0} />
                   </span>
+                  <span className="text-sm font-normal text-gray-500">c/unidad</span>
                   {typeof product.oldPrice === "number" && product.oldPrice > product.price && (
                     <span className="text-sm line-through text-gray-400">
                       <FormattedPrice amount={Number(product.oldPrice) || 0} />

@@ -44,10 +44,10 @@ export default function CapacitacionPreviewDetailPage({ course }: Props) {
   const availability = getCourseAvailability(course);
   const seatsLeft = Math.max(0, course.totalSeats - course.soldSeats);
   const waText = `Hola Rossy Resina, quiero reservar el curso: ${course.title}.
-Fecha: ${formatDateTime(course.startAt)}
-Modalidad: ${course.mode}
-Entrada: S/ ${course.price.toFixed(2)}
-Vacantes actuales: ${seatsLeft}`;
+-Fecha: ${formatDateTime(course.startAt)}
+-Modalidad: ${course.mode}
+-Entrada: S/ ${course.price.toFixed(2)}
+-Vacantes actuales: ${seatsLeft}`;
   const waHref = `https://wa.me/${whatsapp}?text=${encodeURIComponent(waText)}`;
 
   return (
@@ -131,19 +131,6 @@ Vacantes actuales: ${seatsLeft}`;
 }
 
 export const getServerSideProps: GetServerSideProps<Props> = async (ctx) => {
-  const session = await getServerSession(ctx.req, ctx.res, authOptions);
-  if (!session) {
-    return {
-      redirect: {
-        destination: `/sign-in?callbackUrl=${encodeURIComponent(`/capacitaciones-preview/${String(ctx.params?.id || "")}`)}`,
-        permanent: false,
-      },
-    };
-  }
-  if ((session.user as any)?.role !== "ADMIN") {
-    return { notFound: true };
-  }
-
   const id = String(ctx.params?.id || "").trim();
   const course = id ? findCourseById(id) || null : null;
   return { props: { course } };

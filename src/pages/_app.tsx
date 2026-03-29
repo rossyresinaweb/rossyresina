@@ -165,17 +165,6 @@ export default function App({
         <Head>
           <title>Rossy Resina</title>
           <meta name="viewport" content="width=device-width, initial-scale=1" />
-          <style>{`
-            @keyframes rrPageEnter {
-              from { opacity: 0; }
-              to { opacity: 1; }
-            }
-            @media (prefers-reduced-motion: reduce) {
-              .rr-page {
-                animation: none !important;
-              }
-            }
-          `}</style>
         </Head>
         {!isAdminRoute && <TopBar />}
         {isAdminRoute ? (

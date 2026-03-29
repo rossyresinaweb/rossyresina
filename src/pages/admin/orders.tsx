@@ -1,9 +1,17 @@
 import Head from "next/head";
-import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { GetServerSideProps } from "next";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import {
+  MagnifyingGlassIcon,
+  ArrowPathIcon,
+  FunnelIcon,
+  EyeIcon,
+  ChatBubbleLeftEllipsisIcon,
+  TruckIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
 
 type Order = {
   id: string;
@@ -11,7 +19,6 @@ type Order = {
   createdAt?: string;
   date: string;
   status: string;
-  workflowStatus?: string;
   total: number;
   paymentMethod?: "YAPE" | "TRANSFER";
   paymentMethodLabel?: string;
@@ -27,8 +34,6 @@ type Order = {
     phone: string;
     dni?: string;
     locationLine?: string;
-    department?: string;
-    province?: string;
     district: string;
     address: string;
     reference?: string;
@@ -38,412 +43,456 @@ type Order = {
   paymentImage?: string;
 };
 
-const statusOptions = [
+const STATUS_OPTIONS = [
   "Pendiente por confirmar",
   "Confirmado",
-  "En proceso de env?o",
+  "En proceso de envío",
   "Enviado",
   "Finalizado",
 ];
 
+const STATUS_STYLE: Record<string, string> = {
+  "pendiente por confirmar": "bg-yellow-100 text-yellow-700 border-yellow-200",
+  confirmado:               "bg-blue-100 text-blue-700 border-blue-200",
+  "en proceso de envío":    "bg-purple-100 text-purple-700 border-purple-200",
+  enviado:                  "bg-indigo-100 text-indigo-700 border-indigo-200",
+  finalizado:               "bg-green-100 text-green-700 border-green-200",
+};
+
+const getStatusStyle = (s: string) => {
+  const key = s.toLowerCase();
+  for (const [k, v] of Object.entries(STATUS_STYLE)) if (key.includes(k)) return v;
+  return "bg-gray-100 text-gray-600 border-gray-200";
+};
+
+const fmt = (n: number) =>
+  new Intl.NumberFormat("es-PE", { minimumFractionDigits: 2 }).format(n);
+
+const fmtDate = (d: string) =>
+  new Date(d).toLocaleDateString("es-PE", { day: "2-digit", month: "short", year: "numeric" });
+
 export default function AdminOrdersPage() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [shipData, setShipData] = useState<Record<string, { shalomVoucherImage: string; shalomPickupCode: string; olvaTrackingImage: string }>>({});
-  const [loading, setLoading] = useState(false);
+  const [orders, setOrders]           = useState<Order[]>([]);
+  const [shipData, setShipData]       = useState<Record<string, { shalomVoucherImage: string; shalomPickupCode: string; olvaTrackingImage: string }>>({});
+  const [loading, setLoading]         = useState(false);
   const [statusFilter, setStatusFilter] = useState("Todos");
+  const [search, setSearch]           = useState("");
   const [includeHistory, setIncludeHistory] = useState(false);
+  const [detailOrder, setDetailOrder] = useState<Order | null>(null);
   const [shipModalOrder, setShipModalOrder] = useState<Order | null>(null);
 
   const loadOrders = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/orders${includeHistory ? "?includeHistory=1" : ""}`);
+      const res  = await fetch(`/api/orders${includeHistory ? "?includeHistory=1" : ""}`);
       const data = await res.json();
       const rows = Array.isArray(data) ? data : [];
       setOrders(rows);
       setShipData((prev) => {
         const next = { ...prev };
         rows.forEach((o: Order) => {
-          const existing = next[o.id] || { shalomVoucherImage: "", shalomPickupCode: "", olvaTrackingImage: "" };
+          const ex = next[o.id] || { shalomVoucherImage: "", shalomPickupCode: "", olvaTrackingImage: "" };
           next[o.id] = {
-            shalomVoucherImage: existing.shalomVoucherImage || String(o.shalomVoucherImage || ""),
-            shalomPickupCode: existing.shalomPickupCode || String(o.shalomPickupCode || ""),
-            olvaTrackingImage: existing.olvaTrackingImage || String(o.olvaTrackingImage || ""),
+            shalomVoucherImage: ex.shalomVoucherImage || String(o.shalomVoucherImage || ""),
+            shalomPickupCode:   ex.shalomPickupCode   || String(o.shalomPickupCode   || ""),
+            olvaTrackingImage:  ex.olvaTrackingImage  || String(o.olvaTrackingImage  || ""),
           };
         });
         return next;
       });
-    } catch {
-      setOrders([]);
-    } finally {
-      setLoading(false);
-    }
+    } catch { setOrders([]); }
+    finally  { setLoading(false); }
   }, [includeHistory]);
 
-  useEffect(() => {
-    loadOrders();
-  }, [loadOrders]);
+  useEffect(() => { loadOrders(); }, [loadOrders]);
 
-  const setShipField = (orderId: string, key: "shalomVoucherImage" | "shalomPickupCode" | "olvaTrackingImage", value: string) => {
-    setShipData((prev) => ({
-      ...prev,
-      [orderId]: {
-        shalomVoucherImage: prev[orderId]?.shalomVoucherImage || "",
-        shalomPickupCode: prev[orderId]?.shalomPickupCode || "",
-        olvaTrackingImage: prev[orderId]?.olvaTrackingImage || "",
-        [key]: value,
-      },
-    }));
-  };
+  const setShipField = (id: string, key: "shalomVoucherImage" | "shalomPickupCode" | "olvaTrackingImage", val: string) =>
+    setShipData((prev) => ({ ...prev, [id]: { shalomVoucherImage: "", shalomPickupCode: "", olvaTrackingImage: "", ...prev[id], [key]: val } }));
 
   const uploadImage = async (file: File) => {
-    const reader = new FileReader();
-    const dataUrl = await new Promise<string>((resolve, reject) => {
-      reader.onload = () => resolve(String(reader.result || ""));
-      reader.onerror = () => reject(new Error("No se pudo leer la imagen"));
+    const reader  = new FileReader();
+    const dataUrl = await new Promise<string>((res, rej) => {
+      reader.onload  = () => res(String(reader.result || ""));
+      reader.onerror = () => rej(new Error("No se pudo leer la imagen"));
       reader.readAsDataURL(file);
     });
-    const res = await fetch("/api/upload", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ filename: file.name, data: dataUrl }),
-    });
-    const body = await res.json().catch(() => ({}));
-    if (!res.ok || !body?.url) throw new Error(body?.error || "No se pudo subir la imagen");
+    const r    = await fetch("/api/upload", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ filename: file.name, data: dataUrl }) });
+    const body = await r.json().catch(() => ({}));
+    if (!r.ok || !body?.url) throw new Error(body?.error || "No se pudo subir la imagen");
     return String(body.url);
   };
 
-  const handleShipImage = async (orderId: string, key: "shalomVoucherImage" | "olvaTrackingImage", file?: File | null) => {
+  const handleShipImage = async (id: string, key: "shalomVoucherImage" | "olvaTrackingImage", file?: File | null) => {
     if (!file) return;
-    try {
-      const url = await uploadImage(file);
-      setShipField(orderId, key, url);
-    } catch (e: any) {
-      alert(e?.message || "No se pudo subir la imagen");
-    }
+    try { setShipField(id, key, await uploadImage(file)); }
+    catch (e: any) { alert(e?.message || "No se pudo subir la imagen"); }
   };
 
   const updateStatus = async (order: Order, status: string, opts?: { notify?: boolean; closeModal?: boolean }) => {
-    const payload = {
-      status,
-      shalomVoucherImage: shipData[order.id]?.shalomVoucherImage || "",
-      shalomPickupCode: shipData[order.id]?.shalomPickupCode || "",
-      olvaTrackingImage: shipData[order.id]?.olvaTrackingImage || "",
-    };
     const res = await fetch(`/api/orders/${order.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        status,
+        shalomVoucherImage: shipData[order.id]?.shalomVoucherImage || "",
+        shalomPickupCode:   shipData[order.id]?.shalomPickupCode   || "",
+        olvaTrackingImage:  shipData[order.id]?.olvaTrackingImage  || "",
+      }),
     });
     const updated = await res.json().catch(() => null);
-    if (!res.ok) {
-      alert(updated?.error || "No se pudo actualizar el pedido");
-      return;
-    }
+    if (!res.ok) { alert(updated?.error || "No se pudo actualizar el pedido"); return; }
     if (updated && opts?.notify) notifyByWhatsApp(updated as Order, status);
     if (opts?.closeModal) setShipModalOrder(null);
     loadOrders();
   };
 
   const normalizePhone = (raw: string) => {
-    const digits = String(raw || "").replace(/\D/g, "");
-    if (!digits) return "";
-    if (digits.startsWith("51")) return digits;
-    if (digits.length === 9) return `51${digits}`;
-    return digits;
-  };
-
-  const statusText = (status: string) => {
-    const s = String(status || "").trim().toLowerCase();
-    if (s.includes("confirmado")) return "fue confirmado";
-    if (s.includes("proceso")) return "esta en preparacion";
-    if (s.includes("enviado")) return "fue enviado";
-    if (s.includes("finalizado")) return "fue finalizado";
-    return "fue actualizado";
+    const d = String(raw || "").replace(/\D/g, "");
+    if (!d) return "";
+    if (d.startsWith("51")) return d;
+    if (d.length === 9) return `51${d}`;
+    return d;
   };
 
   const notifyByWhatsApp = (order: Order, nextStatus?: string) => {
     const phone = normalizePhone(order?.customer?.phone || "");
     if (!phone) return;
-    const code = order.orderCode || order.id;
-    const shalomCode = String(order.shalomPickupCode || "");
-    const shalomVoucher = String(order.shalomVoucherImage || "");
-    const olvaTracking = String(order.olvaTrackingImage || "");
+    const statusVerb = (s: string) => {
+      const l = s.toLowerCase();
+      if (l.includes("confirmado")) return "fue confirmado";
+      if (l.includes("proceso"))   return "está en preparación";
+      if (l.includes("enviado"))   return "fue enviado";
+      if (l.includes("finalizado")) return "fue finalizado";
+      return "fue actualizado";
+    };
+    const code    = order.orderCode || order.id;
     const carrier = order.shippingCarrier === "OLVA" ? "Olva Courier" : "Shalom";
+    const sd      = shipData[order.id];
     const msg = [
       `Hola ${order.customer?.name || ""},`,
-      `tu pedido ${code} ${statusText(nextStatus || order.status)}.`,
-      `Estado actual: ${nextStatus || order.status}.`,
+      `tu pedido ${code} ${statusVerb(nextStatus || order.status)}.`,
+      `Estado: ${nextStatus || order.status}.`,
       `Agencia: ${carrier}.`,
       ...(order.shippingCarrier === "SHALOM"
-        ? [
-            shalomCode ? `Clave Shalom: ${shalomCode}` : "",
-            shalomVoucher ? `Voucher Shalom: ${shalomVoucher}` : "",
-          ]
-        : [olvaTracking ? `Tracking Olva: ${olvaTracking}` : ""]),
+        ? [sd?.shalomPickupCode ? `Clave Shalom: ${sd.shalomPickupCode}` : "", sd?.shalomVoucherImage ? `Voucher: ${sd.shalomVoucherImage}` : ""]
+        : [sd?.olvaTrackingImage ? `Tracking Olva: ${sd.olvaTrackingImage}` : ""]),
       "Gracias por comprar en Rossy Resina.",
-    ]
-      .filter(Boolean)
-      .join("\n");
-    const wa = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
-    window.open(wa, "_blank");
+    ].filter(Boolean).join("\n");
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
-  const filteredOrders = statusFilter === "Todos"
-    ? orders
-    : orders.filter((o) => o.status === statusFilter);
+  const filtered = useMemo(() => {
+    let list = statusFilter === "Todos" ? orders : orders.filter((o) => o.status === statusFilter);
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      list = list.filter((o) =>
+        [o.customer?.name, o.customer?.email, o.customer?.phone, o.orderCode, o.id]
+          .join(" ").toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [orders, statusFilter, search]);
+
+  // Contadores por estado para las pestañas
+  const countByStatus = useMemo(() => {
+    const map: Record<string, number> = { Todos: orders.length };
+    STATUS_OPTIONS.forEach((s) => { map[s] = orders.filter((o) => o.status === s).length; });
+    return map;
+  }, [orders]);
 
   return (
-    <div className="max-w-screen-2xl mx-auto px-6 py-6">
-      <Head>
-        <title>Admin - Pedidos</title>
-      </Head>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold">Pedidos</h1>
-        <div className="flex items-center gap-3">
-          <label className="text-xs text-gray-600 inline-flex items-center gap-2">
+    <>
+      <Head><title>Pedidos — Admin Rossy Resina</title></Head>
+
+      {/* Filtros y búsqueda */}
+      <div className="bg-white rounded-xl border border-gray-200 p-4 mb-5">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative flex-1 min-w-[200px]">
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
-              type="checkbox"
-              checked={includeHistory}
-              onChange={(e) => setIncludeHistory(e.target.checked)}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar por cliente, email, teléfono o código..."
+              className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-amazon_blue"
             />
+          </div>
+          <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer select-none">
+            <input type="checkbox" checked={includeHistory} onChange={(e) => setIncludeHistory(e.target.checked)} className="rounded" />
             Historial completo
           </label>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="text-sm px-3 py-2 rounded border border-gray-300 bg-white"
-          >
-            <option value="Todos">Todos</option>
-            {statusOptions.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-          <button onClick={loadOrders} className="text-sm px-3 py-2 rounded border border-gray-300 hover:bg-gray-50">Actualizar</button>
-          <Link href="/admin" className="text-sm text-amazon_blue hover:underline">Volver</Link>
+          <button onClick={loadOrders} className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition">
+            <ArrowPathIcon className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+            Actualizar
+          </button>
+        </div>
+
+        {/* Pestañas de estado */}
+        <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-gray-100">
+          {["Todos", ...STATUS_OPTIONS].map((s) => (
+            <button
+              key={s}
+              onClick={() => setStatusFilter(s)}
+              className={`px-3 py-1 rounded-full text-xs font-semibold border transition ${
+                statusFilter === s
+                  ? "bg-amazon_blue text-white border-amazon_blue"
+                  : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
+              }`}
+            >
+              {s} <span className="ml-1 opacity-70">({countByStatus[s] || 0})</span>
+            </button>
+          ))}
         </div>
       </div>
 
-      {loading ? (
-        <div className="bg-white border border-gray-200 rounded-lg p-6 text-sm text-gray-600">Cargando...</div>
-      ) : filteredOrders.length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-lg p-6 text-sm text-gray-600">
-          Todavia no hay pedidos registrados.
+      {/* Resumen rápido */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-5">
+        {STATUS_OPTIONS.map((s) => (
+          <button
+            key={s}
+            onClick={() => setStatusFilter(s)}
+            className={`bg-white rounded-xl border p-3 text-left hover:shadow-sm transition cursor-pointer ${statusFilter === s ? "border-amazon_blue" : "border-gray-200"}`}
+          >
+            <p className="text-xl font-bold text-gray-900">{countByStatus[s] || 0}</p>
+            <p className="text-[11px] text-gray-400 mt-0.5 leading-tight">{s}</p>
+            <span className={`mt-1 inline-block text-[10px] font-semibold px-1.5 py-0.5 rounded-full border ${getStatusStyle(s)}`}>
+              {s.split(" ")[0]}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {/* Tabla */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
+          <p className="text-sm font-semibold text-gray-700">
+            {filtered.length} pedido{filtered.length !== 1 ? "s" : ""}
+            {statusFilter !== "Todos" && <span className="ml-1 text-gray-400">· {statusFilter}</span>}
+          </p>
+          <FunnelIcon className="w-4 h-4 text-gray-300" />
         </div>
-      ) : (
-        <div className="grid gap-4">
-          {filteredOrders.map((o) => (
-            <div key={o.id} className="bg-white border border-gray-200 rounded-lg p-5">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="text-sm font-semibold">{o.customer?.name || "Cliente"}</div>
-                <div className="text-xs text-gray-500">{o.customer?.email}</div>
-                <div className="text-xs text-gray-500">{o.customer?.phone}</div>
-                <div className="text-xs text-gray-500">Fecha: {o.date}</div>
-                <div className="text-xs text-gray-500">Pedido: {o.orderCode || o.id}</div>
-                <div className="text-sm font-semibold">{o.status}</div>
-              </div>
 
-              <div className="mt-3 grid md:grid-cols-2 gap-4">
-                <div className="text-sm text-gray-700">
-                  <div className="mb-2"><strong>Cotizacion enviada:</strong></div>
-                  <ul className="list-disc pl-5 text-xs text-gray-600 space-y-1">
-                    {(o.items || []).map((it: any, idx: number) => (
-                      <li key={`${o.id}-${idx}`}>
-                        {it.title || "Producto"} x{Number(it.quantity || 1)}  -  S/ {Number(it.price || 0).toFixed(2)}
-                      </li>
-                    ))}
-                  </ul>
-                  <div><strong>DNI:</strong> {o.customer?.dni || "-"}</div>
-                  <div><strong>Ubicacion:</strong> {o.customer?.locationLine || "-"}</div>
-                  <div><strong>Agencia de env?o:</strong> {o.shippingCarrierLabel || "Shalom"}</div>
-                  {o.shippingCarrier === "SHALOM" ? (
-                    <div><strong>Agencia Shalom:</strong> {o.customer?.shalomAgency || "-"}</div>
-                  ) : (
-                    <>
-                      <div><strong>Direccion Olva:</strong> {o.customer?.address || "-"}</div>
-                      <div><strong>Referencia:</strong> {o.customer?.reference || "-"}</div>
-                    </>
-                  )}
-                  <div><strong>M?todo de pago:</strong> {o.paymentMethodLabel || "Yape"}</div>
-                  <div><strong>Telefono:</strong> {o.customer?.phone || "-"}</div>
-                  {o.status === "Enviado" && (
-                    <div className="mt-3 rounded-md border border-gray-200 p-3">
-                      <p className="text-xs font-semibold text-gray-700">Datos para estado Enviado</p>
-                      {o.shippingCarrier === "SHALOM" ? (
-                        <div className="mt-2 grid gap-2">
-                          <label className="text-xs text-gray-600">Clave Shalom</label>
-                          <input
-                            value={shipData[o.id]?.shalomPickupCode || ""}
-                            onChange={(e) => setShipField(o.id, "shalomPickupCode", e.target.value)}
-                            className="w-full border border-gray-300 rounded px-2 py-1 text-xs"
-                          />
-                          <label className="text-xs text-gray-600">Voucher Shalom (imagen)</label>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => handleShipImage(o.id, "shalomVoucherImage", e.target.files?.[0])}
-                            className="w-full border border-gray-300 rounded px-2 py-1 text-xs bg-white"
-                          />
-                          {shipData[o.id]?.shalomVoucherImage && (
-                            <a href={shipData[o.id].shalomVoucherImage} target="_blank" rel="noreferrer" className="text-xs text-amazon_blue hover:underline">
-                              Ver voucher Shalom
-                            </a>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="mt-2 grid gap-2">
-                          <label className="text-xs text-gray-600">Tracking Olva (imagen voucher)</label>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => handleShipImage(o.id, "olvaTrackingImage", e.target.files?.[0])}
-                            className="w-full border border-gray-300 rounded px-2 py-1 text-xs bg-white"
-                          />
-                          {shipData[o.id]?.olvaTrackingImage && (
-                            <a href={shipData[o.id].olvaTrackingImage} target="_blank" rel="noreferrer" className="text-xs text-amazon_blue hover:underline">
-                              Ver tracking Olva
-                            </a>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  {o.customer?.notes && <div><strong>Notas:</strong> {o.customer.notes}</div>}
-                  <div className="mt-2"><strong>Total:</strong> S/ {Number(o.total || 0).toFixed(2)}</div>
-                </div>
-                <div>
-                  {o.paymentImage ? (
-                    <a href={o.paymentImage} target="_blank" rel="noreferrer" className="block">
-                      <img src={o.paymentImage} alt="Comprobante" className="max-h-40 rounded border border-gray-200 hover:opacity-90" />
-                      <p className="text-xs text-amazon_blue mt-1">Ver comprobante en grande</p>
-                    </a>
-                  ) : (
-                    <div className="text-xs text-gray-500">Sin comprobante adjunto</div>
-                  )}
-                </div>
-              </div>
-
-              <div className="mt-4 flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => notifyByWhatsApp({
-                    ...o,
-                    shalomPickupCode: shipData[o.id]?.shalomPickupCode || o.shalomPickupCode || "",
-                    shalomVoucherImage: shipData[o.id]?.shalomVoucherImage || o.shalomVoucherImage || "",
-                    olvaTrackingImage: shipData[o.id]?.olvaTrackingImage || o.olvaTrackingImage || "",
-                  })}
-                  className="px-3 py-1 rounded border border-green-600 text-green-700 text-xs hover:bg-green-50"
-                >
-                  Notificar WhatsApp
-                </button>
-                {statusOptions.map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => {
-                      if (s === "Enviado") {
-                        setShipModalOrder(o);
-                        return;
-                      }
-                      updateStatus(o, s);
-                    }}
-                    className={
-                      "px-3 py-1 rounded border text-xs " +
-                      (o.status === s ? "border-orange-500 text-orange-600" : "border-gray-300 text-gray-700 hover:bg-gray-50")
-                    }
-                  >
-                    {s}
-                  </button>
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="h-7 w-7 rounded-full border-4 border-amazon_blue border-t-transparent animate-spin" />
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-16 text-sm text-gray-400">No hay pedidos para mostrar.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 border-b border-gray-100">
+                <tr>
+                  {["Pedido", "Cliente", "Productos", "Total", "Pago", "Envío", "Estado", "Fecha", "Acciones"].map((h) => (
+                    <th key={h} className="text-left text-xs font-semibold text-gray-400 px-4 py-3 whitespace-nowrap">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {filtered.map((o) => (
+                  <tr key={o.id} className="hover:bg-gray-50/60 transition-colors">
+                    <td className="px-4 py-3 font-mono text-xs text-gray-500 whitespace-nowrap">
+                      {o.orderCode || o.id.slice(0, 8) + "…"}
+                    </td>
+                    <td className="px-4 py-3">
+                      <p className="font-semibold text-gray-800 whitespace-nowrap">{o.customer?.name || "—"}</p>
+                      <p className="text-xs text-gray-400">{o.customer?.phone}</p>
+                    </td>
+                    <td className="px-4 py-3 text-xs text-gray-500 max-w-[160px]">
+                      {(o.items || []).slice(0, 2).map((it: any, i: number) => (
+                        <p key={i} className="truncate">{it.title} x{it.quantity || 1}</p>
+                      ))}
+                      {(o.items || []).length > 2 && <p className="text-gray-400">+{o.items.length - 2} más</p>}
+                    </td>
+                    <td className="px-4 py-3 font-bold text-gray-900 whitespace-nowrap">S/ {fmt(o.total)}</td>
+                    <td className="px-4 py-3">
+                      <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                        {o.paymentMethodLabel || "Yape"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${o.shippingCarrier === "OLVA" ? "bg-orange-100 text-orange-700" : "bg-sky-100 text-sky-700"}`}>
+                        {o.shippingCarrierLabel || "Shalom"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border whitespace-nowrap ${getStatusStyle(o.status)}`}>
+                        {o.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-xs text-gray-400 whitespace-nowrap">
+                      {o.createdAt ? fmtDate(o.createdAt) : o.date}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => setDetailOrder(o)}
+                          className="p-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-amazon_blue transition"
+                          title="Ver detalle"
+                        >
+                          <EyeIcon className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => notifyByWhatsApp(o)}
+                          className="p-1.5 rounded-lg border border-green-200 text-green-600 hover:bg-green-50 transition"
+                          title="Notificar WhatsApp"
+                        >
+                          <ChatBubbleLeftEllipsisIcon className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => setShipModalOrder(o)}
+                          className="p-1.5 rounded-lg border border-indigo-200 text-indigo-600 hover:bg-indigo-50 transition"
+                          title="Gestionar envío"
+                        >
+                          <TruckIcon className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
                 ))}
-              </div>
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Modal detalle */}
+      {detailOrder && (
+        <Modal title={`Pedido ${detailOrder.orderCode || detailOrder.id.slice(0, 8)}`} onClose={() => setDetailOrder(null)}>
+          <div className="grid md:grid-cols-2 gap-5">
+            <div className="space-y-3">
+              <Section title="Cliente">
+                <Row label="Nombre"   value={detailOrder.customer?.name} />
+                <Row label="Email"    value={detailOrder.customer?.email} />
+                <Row label="Teléfono" value={detailOrder.customer?.phone} />
+                <Row label="DNI"      value={detailOrder.customer?.dni} />
+                <Row label="Ubicación" value={detailOrder.customer?.locationLine} />
+              </Section>
+              <Section title="Envío">
+                <Row label="Agencia" value={detailOrder.shippingCarrierLabel || "Shalom"} />
+                {detailOrder.shippingCarrier === "SHALOM"
+                  ? <Row label="Agencia Shalom" value={detailOrder.customer?.shalomAgency} />
+                  : <>
+                      <Row label="Dirección Olva" value={detailOrder.customer?.address} />
+                      <Row label="Referencia"     value={detailOrder.customer?.reference} />
+                    </>
+                }
+              </Section>
+              <Section title="Pago">
+                <Row label="Método" value={detailOrder.paymentMethodLabel || "Yape"} />
+                <Row label="Total"  value={`S/ ${fmt(detailOrder.total)}`} />
+              </Section>
+              {detailOrder.customer?.notes && <Section title="Notas"><p className="text-xs text-gray-600">{detailOrder.customer.notes}</p></Section>}
             </div>
-          ))}
-        </div>
-      )}
-
-      {shipModalOrder && (
-        <div className="fixed inset-0 z-[80] bg-black/50 flex items-center justify-center p-4">
-          <div className="w-full max-w-xl bg-white rounded-lg border border-gray-200 p-5">
-            <h2 className="text-lg font-semibold">Enviar pedido y notificar por WhatsApp</h2>
-            <p className="text-sm text-gray-600 mt-1">
-              Pedido: <strong>{shipModalOrder.orderCode || shipModalOrder.id}</strong>
-            </p>
-            <p className="text-sm text-gray-600">
-              Agencia: <strong>{shipModalOrder.shippingCarrierLabel || "Shalom"}</strong>
-            </p>
-
-            {shipModalOrder.shippingCarrier === "SHALOM" ? (
-              <div className="mt-4 grid gap-3">
-                <div>
-                  <label className="text-sm text-gray-600">Clave Shalom</label>
-                  <input
-                    value={shipData[shipModalOrder.id]?.shalomPickupCode || ""}
-                    onChange={(e) => setShipField(shipModalOrder.id, "shalomPickupCode", e.target.value)}
-                    className="w-full border border-gray-300 rounded px-3 py-2"
-                  />
+            <div className="space-y-3">
+              <Section title="Productos">
+                <ul className="space-y-1.5">
+                  {(detailOrder.items || []).map((it: any, i: number) => (
+                    <li key={i} className="flex justify-between text-xs text-gray-700">
+                      <span className="truncate mr-2">{it.title} x{it.quantity || 1}</span>
+                      <span className="font-semibold shrink-0">S/ {fmt(Number(it.price || 0))}</span>
+                    </li>
+                  ))}
+                </ul>
+              </Section>
+              {detailOrder.paymentImage && (
+                <Section title="Comprobante de pago">
+                  <a href={detailOrder.paymentImage} target="_blank" rel="noreferrer">
+                    <img src={detailOrder.paymentImage} alt="Comprobante" className="rounded-lg border border-gray-200 max-h-48 object-contain hover:opacity-90 transition" />
+                  </a>
+                </Section>
+              )}
+              <Section title="Cambiar estado">
+                <div className="flex flex-wrap gap-2">
+                  {STATUS_OPTIONS.map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => { updateStatus(detailOrder, s); setDetailOrder(null); }}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition ${
+                        detailOrder.status === s
+                          ? getStatusStyle(s) + " font-bold"
+                          : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                      }`}
+                    >
+                      {s}
+                    </button>
+                  ))}
                 </div>
-                <div>
-                  <label className="text-sm text-gray-600">Voucher Shalom (foto)</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleShipImage(shipModalOrder.id, "shalomVoucherImage", e.target.files?.[0])}
-                    className="w-full border border-gray-300 rounded px-3 py-2 bg-white"
-                  />
-                  {shipData[shipModalOrder.id]?.shalomVoucherImage && (
-                    <a href={shipData[shipModalOrder.id].shalomVoucherImage} target="_blank" rel="noreferrer" className="text-xs text-amazon_blue hover:underline">
-                      Ver voucher cargado
-                    </a>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="mt-4 grid gap-3">
-                <div>
-                  <label className="text-sm text-gray-600">Tracking Olva (foto voucher)</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleShipImage(shipModalOrder.id, "olvaTrackingImage", e.target.files?.[0])}
-                    className="w-full border border-gray-300 rounded px-3 py-2 bg-white"
-                  />
-                  {shipData[shipModalOrder.id]?.olvaTrackingImage && (
-                    <a href={shipData[shipModalOrder.id].olvaTrackingImage} target="_blank" rel="noreferrer" className="text-xs text-amazon_blue hover:underline">
-                      Ver tracking cargado
-                    </a>
-                  )}
-                </div>
-              </div>
-            )}
-
-            <div className="mt-5 flex flex-wrap gap-2 justify-end">
-              <button
-                type="button"
-                onClick={() => setShipModalOrder(null)}
-                className="px-4 py-2 rounded border border-gray-300 text-sm font-semibold hover:bg-gray-50"
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={() => updateStatus(shipModalOrder, "Enviado", { notify: false, closeModal: true })}
-                className="px-4 py-2 rounded border border-orange-500 text-orange-700 text-sm font-semibold hover:bg-orange-50"
-              >
-                Guardar Enviado
-              </button>
-              <button
-                type="button"
-                onClick={() => updateStatus(shipModalOrder, "Enviado", { notify: true, closeModal: true })}
-                className="px-4 py-2 rounded bg-green-600 text-white text-sm font-semibold hover:bg-green-700"
-              >
-                Guardar y enviar WhatsApp
-              </button>
+              </Section>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
+
+      {/* Modal envío */}
+      {shipModalOrder && (
+        <Modal title={`Gestionar envío — ${shipModalOrder.orderCode || shipModalOrder.id.slice(0, 8)}`} onClose={() => setShipModalOrder(null)}>
+          <p className="text-sm text-gray-500 mb-4">Agencia: <strong>{shipModalOrder.shippingCarrierLabel || "Shalom"}</strong></p>
+          {shipModalOrder.shippingCarrier === "SHALOM" ? (
+            <div className="space-y-3">
+              <Field label="Clave Shalom">
+                <input value={shipData[shipModalOrder.id]?.shalomPickupCode || ""} onChange={(e) => setShipField(shipModalOrder.id, "shalomPickupCode", e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" />
+              </Field>
+              <Field label="Voucher Shalom (imagen)">
+                <input type="file" accept="image/*" onChange={(e) => handleShipImage(shipModalOrder.id, "shalomVoucherImage", e.target.files?.[0])} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" />
+                {shipData[shipModalOrder.id]?.shalomVoucherImage && <a href={shipData[shipModalOrder.id].shalomVoucherImage} target="_blank" rel="noreferrer" className="text-xs text-amazon_blue hover:underline mt-1 block">Ver voucher cargado</a>}
+              </Field>
+            </div>
+          ) : (
+            <Field label="Tracking Olva (imagen voucher)">
+              <input type="file" accept="image/*" onChange={(e) => handleShipImage(shipModalOrder.id, "olvaTrackingImage", e.target.files?.[0])} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" />
+              {shipData[shipModalOrder.id]?.olvaTrackingImage && <a href={shipData[shipModalOrder.id].olvaTrackingImage} target="_blank" rel="noreferrer" className="text-xs text-amazon_blue hover:underline mt-1 block">Ver tracking cargado</a>}
+            </Field>
+          )}
+          <div className="flex flex-wrap gap-2 justify-end mt-5 pt-4 border-t border-gray-100">
+            <button onClick={() => setShipModalOrder(null)} className="px-4 py-2 rounded-lg border border-gray-200 text-sm font-semibold hover:bg-gray-50">Cancelar</button>
+            <button onClick={() => updateStatus(shipModalOrder, "Enviado", { notify: false, closeModal: true })} className="px-4 py-2 rounded-lg border border-orange-300 text-orange-700 text-sm font-semibold hover:bg-orange-50">Guardar enviado</button>
+            <button onClick={() => updateStatus(shipModalOrder, "Enviado", { notify: true, closeModal: true })} className="px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700">Guardar y notificar WhatsApp</button>
+          </div>
+        </Modal>
+      )}
+    </>
+  );
+}
+
+// ── Componentes auxiliares ──────────────────────────────────────────────────
+
+function Modal({ title, children, onClose }: { title: string; children: React.ReactNode; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-[80] bg-black/40 flex items-center justify-center p-4" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl max-h-[90vh] flex flex-col">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <p className="font-bold text-gray-900">{title}</p>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 transition"><XMarkIcon className="w-5 h-5 text-gray-500" /></button>
+        </div>
+        <div className="overflow-y-auto p-5">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">{title}</p>
+      <div className="bg-gray-50 rounded-xl p-3 space-y-1.5">{children}</div>
+    </div>
+  );
+}
+
+function Row({ label, value }: { label: string; value?: string }) {
+  return (
+    <div className="flex justify-between gap-2 text-xs">
+      <span className="text-gray-400 shrink-0">{label}</span>
+      <span className="text-gray-800 font-medium text-right">{value || "—"}</span>
+    </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="block text-xs font-semibold text-gray-600 mb-1">{label}</label>
+      {children}
     </div>
   );
 }

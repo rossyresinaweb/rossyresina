@@ -1506,15 +1506,24 @@
   },
   {
     "code": "RR-0116",
-    "title": "FIGURAS",
+    "title": "Figuras",
     "brand": "Rossy Resina",
     "category": "Moldes de silicona",
-    "description": "",
-    "image": "favicon-96x96.png",
+    "description": "Precio por Unidad",
+    "image": "https://res.cloudinary.com/dndj6lrqh/image/upload/v1774373348/products/molde_figuras_01_1774373348512_fc6c8197.avif",
     "isNew": true,
     "price": 3,
-    "_id": 1765504361152,
-    "sku": "MOL-2026-0122"
+    "_id": "cmn4sjrqa000arzwnvyqkay19",
+    "sku": "MOL-2026-0122",
+    "barcode": "5503786307622",
+    "stock": 100,
+    "images": [
+      "https://res.cloudinary.com/dndj6lrqh/image/upload/v1774373345/products/molde_figuras_05_1774373344990_2f602b96.avif",
+      "https://res.cloudinary.com/dndj6lrqh/image/upload/v1774373345/products/molde_figuras_04_1774373345712_76028ea4.avif",
+      "https://res.cloudinary.com/dndj6lrqh/image/upload/v1774373346/products/molde_figuras_03_1774373346469_78e101c0.avif",
+      "https://res.cloudinary.com/dndj6lrqh/image/upload/v1774373347/products/molde_figuras_02_1774373347281_d59afbd8.avif",
+      "https://res.cloudinary.com/dndj6lrqh/image/upload/v1774373348/products/molde_figuras_01_1774373348512_fc6c8197.avif"
+    ]
   },
   {
     "code": "RR-0117",
@@ -1566,14 +1575,23 @@
   },
   {
     "code": "RR-0001",
-    "title": "PRODUCTO POR UNIDAD POR CAJA IMAGEN REFERENCIAL PURPURINA",
+    "title": "Caja Pigmentos Perlados",
     "brand": "Rossy Resina",
-    "category": "Moldes de silicona",
+    "category": "Pigmentos y glitters",
     "description": "",
-    "image": "favicon-96x96.png",
+    "image": "https://res.cloudinary.com/dndj6lrqh/image/upload/v1774370545/products/caja_de_pigmentos_01_1774370545272_8f88448b.avif",
     "isNew": true,
-    "price": 5,
-    "_id": 1765504361364,
-    "sku": "MOL-2026-0127"
+    "price": 40,
+    "_id": "cmn4sjtaj000crzwnwjw1suxx",
+    "sku": "MOL-2026-0127",
+    "barcode": "5611981722567",
+    "stock": 10,
+    "images": [
+      "https://res.cloudinary.com/dndj6lrqh/image/upload/v1774370541/products/caja_pigmentos_05_1774370541877_1c6b378e.avif",
+      "https://res.cloudinary.com/dndj6lrqh/image/upload/v1774370543/products/caja_pigmentos_04_1774370542969_3007713c.avif",
+      "https://res.cloudinary.com/dndj6lrqh/image/upload/v1774370543/products/caja_pigmentos_03_1774370543801_30b40639.avif",
+      "https://res.cloudinary.com/dndj6lrqh/image/upload/v1774370544/products/caja_pigmentos_02_1774370544550_f66b32cb.avif",
+      "https://res.cloudinary.com/dndj6lrqh/image/upload/v1774370545/products/caja_de_pigmentos_01_1774370545272_8f88448b.avif"
+    ]
   }
 ]

@@ -3,443 +3,259 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { GetServerSideProps } from "next";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { ArrowPathIcon, ArrowDownTrayIcon, ShieldExclamationIcon, GlobeAltIcon, UsersIcon, EyeIcon } from "@heroicons/react/24/outline";
 
 type WindowPreset = "24h" | "7d" | "30d" | "90d" | "365d" | "all";
 
-const WINDOW_OPTIONS: Array<{ value: WindowPreset; label: string }> = [
-  { value: "24h", label: "24 horas" },
-  { value: "7d", label: "7 d?as" },
-  { value: "30d", label: "30 d?as" },
-  { value: "90d", label: "90 d?as" },
-  { value: "365d", label: "365 d?as" },
-  { value: "all", label: "Todo el historial" },
+const WINDOWS: Array<{ value: WindowPreset; label: string }> = [
+  { value: "24h",  label: "24 horas" },
+  { value: "7d",   label: "7 días" },
+  { value: "30d",  label: "30 días" },
+  { value: "90d",  label: "90 días" },
+  { value: "365d", label: "365 días" },
+  { value: "all",  label: "Todo" },
 ];
 
-const fmtDateTime = (value: string | null | undefined) => {
-  const v = String(value || "").trim();
-  if (!v) return "-";
-  const d = new Date(v);
-  if (Number.isNaN(d.getTime())) return v;
-  return d.toLocaleString("es-PE");
-};
+const fmtDate = (v: string) => v ? new Date(v).toLocaleString("es-PE") : "—";
 
 export default function AdminVisitsPage() {
-  const [windowPreset, setWindowPreset] = useState<WindowPreset>("30d");
-  const [stats, setStats] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [myIp, setMyIp] = useState("");
+  const [window, setWindow]           = useState<WindowPreset>("30d");
+  const [stats, setStats]             = useState<any>(null);
+  const [loading, setLoading]         = useState(true);
+  const [error, setError]             = useState("");
+  const [myIp, setMyIp]               = useState("");
   const [excludedIps, setExcludedIps] = useState<Array<{ ip: string; note: string; createdAt: string }>>([]);
-  const [ipLoading, setIpLoading] = useState(false);
-  const [ipMessage, setIpMessage] = useState("");
+  const [ipLoading, setIpLoading]     = useState(false);
+  const [ipMsg, setIpMsg]             = useState("");
+  const [showIpPanel, setShowIpPanel] = useState(false);
 
-  const load = useCallback(async (opts?: { silent?: boolean }) => {
-    const silent = Boolean(opts?.silent);
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 15000);
-    if (!silent) {
-      setLoading(true);
-      setError("");
-    }
+  const load = useCallback(async () => {
+    setLoading(true); setError("");
     try {
-      const r = await fetch(`/api/admin/visits?window=${encodeURIComponent(windowPreset)}`, { signal: controller.signal });
-      if (!r.ok) {
-        const body = await r.json().catch(() => ({}));
-        throw new Error(String(body?.error || `Error ${r.status}`));
-      }
-      const body = await r.json();
-      setStats(body);
-      if (silent) setError("");
-    } catch (e: any) {
-      const msg = String(e?.message || "");
-      if (!silent) {
-        if (msg.toLowerCase().includes("abort")) {
-          setError("Tiempo de espera agotado. Reintenta en unos segundos.");
-        } else {
-          setError(msg || "No se pudieron cargar estad?sticas");
-        }
-        setStats(null);
-      }
-    } finally {
-      clearTimeout(timeout);
-      controller.abort();
-      if (!silent) {
-        setLoading(false);
-      }
-    }
-  }, [windowPreset]);
+      const r = await fetch(`/api/admin/visits?window=${window}`);
+      if (!r.ok) throw new Error(`Error ${r.status}`);
+      setStats(await r.json());
+    } catch (e: any) { setError(e.message || "Error"); setStats(null); }
+    finally { setLoading(false); }
+  }, [window]);
 
-  const loadExcludedIps = useCallback(async () => {
+  const loadIps = useCallback(async () => {
     setIpLoading(true);
-    setIpMessage("");
     try {
       const r = await fetch("/api/admin/visit-exclusions");
-      const body = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(String(body?.error || `Error ${r.status}`));
-      setMyIp(String(body?.myIp || ""));
-      setExcludedIps(Array.isArray(body?.items) ? body.items : []);
-    } catch (e: any) {
-      setIpMessage(`No se pudo cargar exclusion de IPs: ${String(e?.message || "Error")}`);
-    } finally {
-      setIpLoading(false);
-    }
+      const b = await r.json();
+      setMyIp(String(b?.myIp || ""));
+      setExcludedIps(Array.isArray(b?.items) ? b.items : []);
+    } catch {} finally { setIpLoading(false); }
   }, []);
 
-  const excludeMyIp = useCallback(async () => {
-    if (!myIp) {
-      setIpMessage("No se detect? tu IP en esta sesi?n.");
-      return;
-    }
+  useEffect(() => { load(); loadIps(); }, [load, loadIps]);
+
+  const excludeIp = async () => {
+    if (!myIp) return;
     setIpLoading(true);
-    setIpMessage("");
     try {
-      const r = await fetch("/api/admin/visit-exclusions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ip: myIp, note: "IP administradora excluida" }),
-      });
-      const body = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(String(body?.error || `Error ${r.status}`));
-      await loadExcludedIps();
-      setIpMessage(`Tu IP ${myIp} fue excluida.`);
-    } catch (e: any) {
-      setIpMessage(`No se pudo excluir tu IP: ${String(e?.message || "Error")}`);
-    } finally {
-      setIpLoading(false);
-    }
-  }, [loadExcludedIps, myIp]);
+      await fetch("/api/admin/visit-exclusions", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ip: myIp, note: "IP administradora" }) });
+      await loadIps(); setIpMsg(`IP ${myIp} excluida correctamente.`);
+    } catch { setIpMsg("No se pudo excluir la IP."); } finally { setIpLoading(false); }
+  };
 
-  const removeExcludedIp = useCallback(
-    async (ip: string) => {
-      const target = String(ip || "").trim();
-      if (!target) return;
-      setIpLoading(true);
-      setIpMessage("");
-      try {
-        const r = await fetch(`/api/admin/visit-exclusions?ip=${encodeURIComponent(target)}`, { method: "DELETE" });
-        if (!r.ok && r.status !== 204) {
-          const body = await r.json().catch(() => ({}));
-          throw new Error(String(body?.error || `Error ${r.status}`));
-        }
-        await loadExcludedIps();
-      } catch (e: any) {
-        setIpMessage(`No se pudo quitar IP excluida: ${String(e?.message || "Error")}`);
-      } finally {
-        setIpLoading(false);
-      }
-    },
-    [loadExcludedIps]
-  );
+  const removeIp = async (ip: string) => {
+    setIpLoading(true);
+    try {
+      await fetch(`/api/admin/visit-exclusions?ip=${encodeURIComponent(ip)}`, { method: "DELETE" });
+      await loadIps();
+    } catch {} finally { setIpLoading(false); }
+  };
 
-  useEffect(() => {
-    load({ silent: false });
-    loadExcludedIps();
-  }, [load, loadExcludedIps]);
-
-  useEffect(() => {
-    setIpMessage("");
-  }, [windowPreset]);
-
-  const maxSeriesValue = useMemo(() => {
-    if (!Array.isArray(stats?.series) || stats.series.length === 0) return 1;
-    return Math.max(1, ...stats.series.map((r: any) => Number(r.visits || 0)));
-  }, [stats]);
+  const maxSeries = useMemo(() =>
+    Math.max(1, ...(stats?.series || []).map((r: any) => Number(r.visits || 0))), [stats]);
 
   return (
-    <div className="max-w-screen-2xl mx-auto px-6 py-6">
-      <Head>
-        <title>Admin - Visitas</title>
-      </Head>
+    <>
+      <Head><title>Visitas — Admin Rossy Resina</title></Head>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-        <h1 className="text-2xl font-semibold">Visitas de la web</h1>
-        <div className="flex items-center gap-2">
-          <select
-            value={windowPreset}
-            onChange={(e) => setWindowPreset(e.target.value as WindowPreset)}
-            className="rounded-md border border-gray-300 px-3 py-2 text-sm"
-          >
-            {WINDOW_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
+      {/* Controles */}
+      <div className="bg-white rounded-xl border border-gray-200 p-4 mb-5">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex gap-1.5 flex-wrap">
+            {WINDOWS.map((w) => (
+              <button
+                key={w.value}
+                onClick={() => setWindow(w.value)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition ${
+                  window === w.value ? "bg-amazon_blue text-white border-amazon_blue" : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
+                }`}
+              >
+                {w.label}
+              </button>
             ))}
-          </select>
-          <button
-            type="button"
-            onClick={() => load({ silent: false })}
-            className="rounded-md bg-gray-900 px-3 py-2 text-xs font-semibold text-white hover:bg-black"
-          >
-            Actualizar
-          </button>
-          <a
-            href={`/api/admin/visits?window=${encodeURIComponent(windowPreset)}&format=csv`}
-            className="rounded-md bg-green-700 px-3 py-2 text-xs font-semibold text-white hover:bg-green-800"
-          >
-            Exportar CSV
-          </a>
+          </div>
+          <div className="flex gap-2 ml-auto">
+            <button onClick={load} className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition">
+              <ArrowPathIcon className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+              Actualizar
+            </button>
+            <a href={`/api/admin/visits?window=${window}&format=csv`} className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-green-200 text-sm text-green-700 hover:bg-green-50 transition">
+              <ArrowDownTrayIcon className="w-4 h-4" />
+              CSV
+            </a>
+            <button onClick={() => setShowIpPanel((v) => !v)} className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition">
+              <ShieldExclamationIcon className="w-4 h-4" />
+              IPs excluidas
+            </button>
+          </div>
         </div>
       </div>
 
+      {/* Panel IPs */}
+      {showIpPanel && (
+        <div className="bg-white rounded-xl border border-gray-200 p-5 mb-5">
+          <p className="text-sm font-bold text-gray-900 mb-3">Gestión de IPs excluidas</p>
+          <div className="flex flex-wrap items-center gap-3 mb-4">
+            <p className="text-xs text-gray-500">Tu IP: <span className="font-semibold text-gray-800">{myIp || "No detectada"}</span></p>
+            <button onClick={excludeIp} disabled={!myIp || ipLoading} className="px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700 disabled:opacity-50 transition">
+              Excluir mi IP
+            </button>
+          </div>
+          {ipMsg && <p className="text-xs text-green-600 mb-3">{ipMsg}</p>}
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 border-b border-gray-100">
+                <tr>
+                  {["IP", "Nota", "Fecha", ""].map((h) => (
+                    <th key={h} className="text-left text-xs font-semibold text-gray-400 px-4 py-2">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {excludedIps.length === 0 ? (
+                  <tr><td colSpan={4} className="px-4 py-4 text-xs text-gray-400 text-center">No hay IPs excluidas.</td></tr>
+                ) : excludedIps.map((row) => (
+                  <tr key={row.ip} className="hover:bg-gray-50/60">
+                    <td className="px-4 py-2 font-mono text-xs text-gray-700">{row.ip}</td>
+                    <td className="px-4 py-2 text-xs text-gray-500">{row.note || "—"}</td>
+                    <td className="px-4 py-2 text-xs text-gray-400">{fmtDate(row.createdAt)}</td>
+                    <td className="px-4 py-2">
+                      <button onClick={() => removeIp(row.ip)} disabled={ipLoading} className="px-2 py-1 rounded-lg bg-red-50 text-red-600 text-xs font-semibold hover:bg-red-100 transition disabled:opacity-50">
+                        Quitar
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {loading ? (
-        <div className="bg-white border border-gray-200 rounded-lg p-6 text-sm text-gray-600">Cargando estad?sticas...</div>
+        <div className="flex items-center justify-center py-20">
+          <div className="h-7 w-7 rounded-full border-4 border-amazon_blue border-t-transparent animate-spin" />
+        </div>
       ) : error ? (
-        <div className="bg-white border border-red-200 rounded-lg p-6 text-sm text-red-700">
-          <p>No se pudieron cargar las estad?sticas: {error}</p>
-          <button
-            type="button"
-            onClick={() => load({ silent: false })}
-            className="mt-3 inline-flex items-center rounded-md bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700"
-          >
-            Reintentar
-          </button>
+        <div className="bg-red-50 border border-red-200 rounded-xl p-5 text-sm text-red-700 flex items-center justify-between">
+          <span>{error}</span>
+          <button onClick={load} className="px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs font-semibold hover:bg-red-700">Reintentar</button>
         </div>
       ) : !stats ? (
-        <div className="bg-white border border-gray-200 rounded-lg p-6 text-sm text-gray-600">A?n no hay datos de visitas.</div>
+        <div className="text-center py-20 text-sm text-gray-400">Aún no hay datos de visitas.</div>
       ) : (
-        <div className="space-y-6">
-          <div className="bg-white border border-gray-200 rounded-lg p-4">
-            <p className="text-sm font-semibold mb-2">Excluir mi IP de visitas</p>
-            <p className="text-xs text-gray-600 mb-3">
-              Tu IP detectada: <span className="font-semibold">{myIp || "No detectada"}</span>
-            </p>
-            <div className="flex flex-wrap items-center gap-2 mb-3">
-              <button
-                type="button"
-                disabled={!myIp || ipLoading}
-                onClick={excludeMyIp}
-                className="rounded-md bg-indigo-700 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50 hover:bg-indigo-800"
-              >
-                Excluir mi IP
-              </button>
-              <button
-                type="button"
-                disabled={ipLoading}
-                onClick={loadExcludedIps}
-                className="rounded-md bg-gray-100 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-200"
-              >
-                Recargar lista
-              </button>
-            </div>
-            {ipMessage ? <p className="text-xs text-gray-700 mb-3">{ipMessage}</p> : null}
-            <div className="overflow-x-auto">
-              <table className="min-w-[620px] w-full text-xs border border-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="text-left p-2 border-b">IP excluida</th>
-                    <th className="text-left p-2 border-b">Nota</th>
-                    <th className="text-left p-2 border-b">Fecha</th>
-                    <th className="text-left p-2 border-b">Accion</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {excludedIps.map((row) => (
-                    <tr key={row.ip}>
-                      <td className="p-2 border-b">{row.ip}</td>
-                      <td className="p-2 border-b">{row.note || "-"}</td>
-                      <td className="p-2 border-b">{fmtDateTime(row.createdAt)}</td>
-                      <td className="p-2 border-b">
-                        <button
-                          type="button"
-                          disabled={ipLoading}
-                          onClick={() => removeExcludedIp(row.ip)}
-                          className="rounded bg-red-600 px-2 py-1 text-white hover:bg-red-700 disabled:opacity-50"
-                        >
-                          Quitar
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                  {excludedIps.length === 0 ? (
-                    <tr>
-                      <td className="p-2 border-b text-gray-500" colSpan={4}>No hay IPs excluidas.</td>
-                    </tr>
-                  ) : null}
-                </tbody>
-              </table>
-            </div>
+        <div className="space-y-5">
+
+          {/* KPIs */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              { label: "Total visitas",        value: stats.overview?.totalVisits,          icon: EyeIcon,      color: "bg-blue-500" },
+              { label: "Visitantes únicos",    value: stats.overview?.uniqueVisitors,       icon: UsersIcon,    color: "bg-purple-500" },
+              { label: "Usuarios registrados", value: stats.overview?.registeredUserVisits, icon: UsersIcon,    color: "bg-green-500" },
+              { label: "Promedio por visitante", value: Number(stats.overview?.avgVisitsPerVisitor || 0).toFixed(1), icon: GlobeAltIcon, color: "bg-amazon_blue" },
+            ].map(({ label, value, icon: Icon, color }) => (
+              <div key={label} className="bg-white rounded-xl border border-gray-200 p-4 flex items-start gap-3">
+                <div className={`h-10 w-10 rounded-lg ${color} flex items-center justify-center text-white shrink-0`}>
+                  <Icon className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400 font-medium">{label}</p>
+                  <p className="text-xl font-bold text-gray-900">{value ?? "—"}</p>
+                </div>
+              </div>
+            ))}
           </div>
 
-          <div className="text-xs text-gray-500">
-            Ventana: {stats?.window?.label || "-"} | Ultima actualizacion: {fmtDateTime(stats?.generatedAt)}
-          </div>
-
-          <div className="grid md:grid-cols-4 gap-4">
-            <div className="bg-white border border-gray-200 rounded-lg p-4 text-sm">
-              <p className="text-gray-500">Total visitas</p>
-              <p className="text-2xl font-semibold mt-1">{Number(stats?.overview?.totalVisits || 0)}</p>
+          {/* Gráfico tendencia */}
+          <div className="bg-white rounded-xl border border-gray-200 p-5">
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-sm font-bold text-gray-900">Tendencia de visitas</p>
+              <p className="text-xs text-gray-400">{stats.window?.label}</p>
             </div>
-            <div className="bg-white border border-gray-200 rounded-lg p-4 text-sm">
-              <p className="text-gray-500">Visitantes unicos</p>
-              <p className="text-2xl font-semibold mt-1">{Number(stats?.overview?.uniqueVisitors || 0)}</p>
-            </div>
-            <div className="bg-white border border-gray-200 rounded-lg p-4 text-sm">
-              <p className="text-gray-500">Visitas de usuarios con cuenta</p>
-              <p className="text-2xl font-semibold mt-1">{Number(stats?.overview?.registeredUserVisits || 0)}</p>
-            </div>
-            <div className="bg-white border border-gray-200 rounded-lg p-4 text-sm">
-              <p className="text-gray-500">Promedio por visitante</p>
-              <p className="text-2xl font-semibold mt-1">{Number(stats?.overview?.avgVisitsPerVisitor || 0)}</p>
-            </div>
-          </div>
-
-          <div className="bg-white border border-gray-200 rounded-lg p-4">
-            <p className="text-sm font-semibold mb-3">Tendencia de visitas ({stats?.window?.granularity === "month" ? "mensual" : "diaria"})</p>
-            {Array.isArray(stats?.series) && stats.series.length > 0 ? (
+            {stats.series?.length > 0 ? (
               <div className="space-y-2">
                 {stats.series.map((row: any) => {
                   const visits = Number(row.visits || 0);
-                  const width = Math.max(2, Math.round((visits / maxSeriesValue) * 100));
+                  const pct    = Math.max(2, Math.round((visits / maxSeries) * 100));
                   return (
-                    <div key={String(row.period)} className="flex items-center gap-3 text-xs">
-                      <div className="w-24 shrink-0 text-gray-600">{String(row.period)}</div>
-                      <div className="h-3 rounded bg-orange-500" style={{ width: `${width}%` }} />
-                      <div className="w-14 shrink-0 text-right">{visits}</div>
+                    <div key={row.period} className="flex items-center gap-3">
+                      <span className="text-xs text-gray-500 w-24 shrink-0">{row.period}</span>
+                      <div className="flex-1 bg-gray-100 rounded-full h-2.5 overflow-hidden">
+                        <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, background: "linear-gradient(90deg, #cb299e, #6E2CA1)" }} />
+                      </div>
+                      <span className="text-xs font-semibold text-gray-700 w-10 text-right shrink-0">{visits}</span>
                     </div>
                   );
                 })}
               </div>
             ) : (
-              <p className="text-xs text-gray-500">No hay datos para esta ventana.</p>
+              <p className="text-xs text-gray-400">No hay datos para esta ventana.</p>
             )}
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-6">
-            <div className="bg-white border border-gray-200 rounded-lg p-4">
-              <p className="text-sm font-semibold mb-3">Visitas por pais</p>
-              <div className="overflow-x-auto">
-                <table className="min-w-[520px] w-full text-xs border border-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="text-left p-2 border-b">Pais</th>
-                      <th className="text-left p-2 border-b">Visitas</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(Array.isArray(stats.byCountry) ? stats.byCountry : []).map((row: any) => (
-                      <tr key={String(row.country)}>
-                        <td className="p-2 border-b">{row.country}</td>
-                        <td className="p-2 border-b">{Number(row.visits || 0)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+          {/* Tablas */}
+          <div className="grid lg:grid-cols-2 gap-5">
+            {[
+              { title: "Páginas más visitadas", data: stats.topPages,   cols: ["Ruta", "Visitas"],  keys: ["path", "visits"] },
+              { title: "Visitas por país",       data: stats.byCountry,  cols: ["País", "Visitas"],  keys: ["country", "visits"] },
+              { title: "Visitas por ciudad",     data: stats.byCity,     cols: ["Ciudad", "Visitas"], keys: ["city", "visits"] },
+              { title: "Usuarios más activos",   data: stats.topUsers,   cols: ["Usuario", "Email", "Visitas", "Última visita"], keys: ["name", "email", "count", "lastSeenAt"] },
+            ].map(({ title, data, cols, keys }) => (
+              <div key={title} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <div className="px-5 py-3 border-b border-gray-100">
+                  <p className="text-sm font-bold text-gray-900">{title}</p>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50 border-b border-gray-100">
+                      <tr>{cols.map((c) => <th key={c} className="text-left text-xs font-semibold text-gray-400 px-4 py-2">{c}</th>)}</tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {(Array.isArray(data) ? data : []).slice(0, 10).map((row: any, i: number) => (
+                        <tr key={i} className="hover:bg-gray-50/60 transition-colors">
+                          {keys.map((k) => (
+                            <td key={k} className="px-4 py-2 text-xs text-gray-700 max-w-[180px] truncate">
+                              {k === "lastSeenAt" ? fmtDate(row[k]) : (row[k] ?? "—")}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                      {(!data || data.length === 0) && (
+                        <tr><td colSpan={cols.length} className="px-4 py-4 text-xs text-gray-400 text-center">Sin datos.</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
-
-            <div className="bg-white border border-gray-200 rounded-lg p-4">
-              <p className="text-sm font-semibold mb-3">Visitas por ciudad</p>
-              <div className="overflow-x-auto">
-                <table className="min-w-[520px] w-full text-xs border border-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="text-left p-2 border-b">Ciudad</th>
-                      <th className="text-left p-2 border-b">Visitas</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(Array.isArray(stats.byCity) ? stats.byCity : []).map((row: any) => (
-                      <tr key={String(row.city)}>
-                        <td className="p-2 border-b">{row.city}</td>
-                        <td className="p-2 border-b">{Number(row.visits || 0)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            ))}
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-6">
-            <div className="bg-white border border-gray-200 rounded-lg p-4">
-              <p className="text-sm font-semibold mb-3">Paginas m?s visitadas</p>
-              <div className="overflow-x-auto">
-                <table className="min-w-[520px] w-full text-xs border border-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="text-left p-2 border-b">Ruta</th>
-                      <th className="text-left p-2 border-b">Visitas</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(Array.isArray(stats.topPages) ? stats.topPages : []).map((row: any) => (
-                      <tr key={String(row.path)}>
-                        <td className="p-2 border-b">{row.path}</td>
-                        <td className="p-2 border-b">{Number(row.visits || 0)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div className="bg-white border border-gray-200 rounded-lg p-4">
-              <p className="text-sm font-semibold mb-3">Usuarios que m?s visitan</p>
-              <div className="overflow-x-auto">
-                <table className="min-w-[620px] w-full text-xs border border-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="text-left p-2 border-b">Usuario</th>
-                      <th className="text-left p-2 border-b">Email</th>
-                      <th className="text-left p-2 border-b">Visitas</th>
-                      <th className="text-left p-2 border-b">Ultima visita</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(Array.isArray(stats.topUsers) ? stats.topUsers : []).map((row: any) => (
-                      <tr key={String(row.email)}>
-                        <td className="p-2 border-b">{row.name || "-"}</td>
-                        <td className="p-2 border-b">{row.email || "-"}</td>
-                        <td className="p-2 border-b">{Number(row.count || 0)}</td>
-                        <td className="p-2 border-b">{fmtDateTime(row.lastSeenAt)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white border border-gray-200 rounded-lg p-4">
-            <p className="text-sm font-semibold mb-3">Visitantes (incluye no logueados)</p>
-            <div className="overflow-x-auto">
-              <table className="min-w-[760px] w-full text-xs border border-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="text-left p-2 border-b">Visitante</th>
-                    <th className="text-left p-2 border-b">Usuario</th>
-                    <th className="text-left p-2 border-b">Pais</th>
-                    <th className="text-left p-2 border-b">Ciudad</th>
-                    <th className="text-left p-2 border-b">Visitas</th>
-                    <th className="text-left p-2 border-b">Ultima visita</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(Array.isArray(stats.topVisitors) ? stats.topVisitors : []).map((row: any) => (
-                    <tr key={String(row.id)}>
-                      <td className="p-2 border-b">{row.id}</td>
-                      <td className="p-2 border-b">{row.userEmail || "-"}</td>
-                      <td className="p-2 border-b">{row.country || "-"}</td>
-                      <td className="p-2 border-b">{row.city || "-"}</td>
-                      <td className="p-2 border-b">{Number(row.count || 0)}</td>
-                      <td className="p-2 border-b">{fmtDateTime(row.lastSeenAt)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
   const session = await getServerSession(ctx.req, ctx.res, authOptions);
   const ok = session && (session.user as any)?.role === "ADMIN";
-  if (!ok) {
-    return { redirect: { destination: "/admin/sign-in?callbackUrl=/admin/visits", permanent: false } };
-  }
+  if (!ok) return { redirect: { destination: "/admin/sign-in?callbackUrl=/admin/visits", permanent: false } };
   return { props: {} };
 };

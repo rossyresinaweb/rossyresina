@@ -29,6 +29,56 @@ export default function Home({ productData, behavior }: Props) {
     [productData]
   );
   const [visibleCount, setVisibleCount] = useState(30);
+  
+  // Carousel refs
+  const visitedCarouselRef = useRef<HTMLDivElement>(null);
+  const offersCarouselRef = useRef<HTMLDivElement>(null);
+  const desktopOffersRef = useRef<HTMLDivElement>(null);
+  const topProductsRef = useRef<HTMLDivElement>(null);
+  
+  // Carousel scroll function
+  const scrollMobile = (direction: 'left' | 'right', carousel: 'visited' | 'offers') => {
+    const ref = carousel === 'visited' ? visitedCarouselRef : offersCarouselRef;
+    if (!ref.current) return;
+    
+    const scrollAmount = 160; // Width of one card + gap
+    const currentScroll = ref.current.scrollLeft;
+    const newScroll = direction === 'left' 
+      ? Math.max(0, currentScroll - scrollAmount)
+      : currentScroll + scrollAmount;
+    
+    ref.current.scrollTo({
+      left: newScroll,
+      behavior: 'smooth'
+    });
+  };
+  
+  // Desktop carousel scroll function
+  const scrollDesktop = (direction: 'left' | 'right', carousel: 'offers' | 'topProducts') => {
+    if (carousel === 'offers' && desktopOffersRef.current) {
+      const scrollAmount = 270; // Width of one desktop card + gap
+      const currentScroll = desktopOffersRef.current.scrollLeft;
+      const newScroll = direction === 'left' 
+        ? Math.max(0, currentScroll - scrollAmount)
+        : currentScroll + scrollAmount;
+      
+      desktopOffersRef.current.scrollTo({
+        left: newScroll,
+        behavior: 'smooth'
+      });
+    } else if (carousel === 'topProducts' && topProductsRef.current) {
+      const scrollAmount = 270; // Width of one desktop card + gap
+      const currentScroll = topProductsRef.current.scrollLeft;
+      const newScroll = direction === 'left' 
+        ? Math.max(0, currentScroll - scrollAmount)
+        : currentScroll + scrollAmount;
+      
+      topProductsRef.current.scrollTo({
+        left: newScroll,
+        behavior: 'smooth'
+      });
+    }
+  };
   const diversifiedProducts = useMemo(() => {
     const detectGroup = (product: ProductProps) => {
       const text = `${product.title || ""} ${product.category || ""}`.toLowerCase();
@@ -254,21 +304,22 @@ export default function Home({ productData, behavior }: Props) {
         </section>
 
         {/* Home mobile app-like */}
-        <section className="md:hidden px-4 pt-4 pb-2 space-y-4">
-          <div className="rounded-2xl bg-gradient-to-r from-[#19b86c] to-[#12a45c] p-4 text-white shadow-sm">
-            <p className="text-xs uppercase tracking-wide opacity-90">Rossy Resina mobile</p>
-            <h1 className="mt-1 text-2xl font-extrabold leading-tight">Explora, crea y vende con resina</h1>
-            <Link href="/search" className="mt-3 inline-flex h-10 items-center justify-center rounded-lg bg-white px-4 text-sm font-bold text-[#14884f]">
-              Buscar productos
+        <section className="md:hidden px-4 pt-2 pb-2 space-y-4">
+          <div className="rounded-2xl bg-gradient-to-r from-[#1a5f3f] to-[#40a373] p-5 text-white shadow-lg">
+            <p className="text-xs uppercase tracking-wide font-medium">Tu especialista en resina</p>
+            <h1 className="mt-1 text-2xl font-bold leading-tight">Materiales premium para tus creaciones</h1>
+            <p className="mt-2 text-sm">Resina epóxica, moldes y pigmentos de calidad</p>
+            <Link href="/search" className="mt-4 inline-flex h-10 items-center justify-center rounded-lg bg-white px-4 text-sm font-bold text-[#1a5f3f] hover:scale-105 transition-transform">
+              Explorar productos
             </Link>
           </div>
 
           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar whitespace-nowrap pb-1">
-            {["Moldes", "Resina", "Pigmentos", "Accesorios", "Kits", "Ofertas"].map((chip) => (
+            {["Resina Epóxica", "Moldes Premium", "Pigmentos", "Accesorios", "Kits", "Ofertas"].map((chip) => (
               <Link
                 key={chip}
                 href={chip === "Ofertas" ? "/productos?ofertas=1" : `/search?q=${encodeURIComponent(chip.toLowerCase())}`}
-                className="rounded-full border border-gray-200 bg-white px-4 py-2 text-xs font-semibold text-gray-700"
+                className="rounded-full border border-gray-200 bg-white px-4 py-2 text-xs font-semibold text-gray-700 hover:border-[#1a5f3f] hover:text-[#1a5f3f] transition-colors"
               >
                 {chip}
               </Link>
@@ -280,20 +331,46 @@ export default function Home({ productData, behavior }: Props) {
               <h2 className="text-base font-extrabold text-gray-900">Más visitados</h2>
               <Link href="/productos" className="text-xs font-semibold text-amazon_blue">Ver todo</Link>
             </div>
-            <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
-              {mobileTopVisited.map((p) => (
-                <Link
-                  key={`m-visit-${p._id}`}
-                  href={`/${p.code || p._id}`}
-                  className="w-[150px] shrink-0 rounded-xl border border-gray-200 bg-white p-2 shadow-sm"
-                >
-                  <div className="relative h-24 overflow-hidden rounded-lg bg-gray-100">
-                    <Image src={normalizeMobileImage(p.image)} alt={p.title || "Producto"} fill className="object-cover" />
-                  </div>
-                  <p className="mt-2 line-clamp-1 text-xs font-semibold text-gray-900">{p.title || "Producto"}</p>
-                  <p className="text-sm font-extrabold text-gray-900">S/ {Number(p.price || 0).toFixed(2)}</p>
-                </Link>
-              ))}
+            <div className="relative">
+              {/* Navigation buttons */}
+              <button
+                onClick={() => scrollMobile('left', 'visited')}
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 -translate-x-2 bg-white/90 backdrop-blur-sm rounded-full p-1.5 shadow-lg border border-gray-200 hover:bg-white hover:shadow-md transition-all duration-200"
+                aria-label="Anterior"
+              >
+                <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <button
+                onClick={() => scrollMobile('right', 'visited')}
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 translate-x-2 bg-white/90 backdrop-blur-sm rounded-full p-1.5 shadow-lg border border-gray-200 hover:bg-white hover:shadow-md transition-all duration-200"
+                aria-label="Siguiente"
+              >
+                <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+              
+              <div 
+                ref={visitedCarouselRef}
+                className="flex gap-3 overflow-x-auto no-scrollbar pb-1 scroll-smooth"
+                style={{ scrollBehavior: 'smooth' }}
+              >
+                {mobileTopVisited.map((p, idx) => (
+                  <Link
+                    key={`m-visit-${p._id}`}
+                    href={`/${p.code || p._id}`}
+                    className="w-[150px] shrink-0 rounded-xl border border-gray-200 bg-white p-2 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 group"
+                  >
+                    <div className="relative h-24 overflow-hidden rounded-lg bg-gray-100">
+                      <Image src={normalizeMobileImage(p.image)} alt={p.title || "Producto"} fill className="object-cover transition-transform duration-300 group-hover:scale-105" />
+                    </div>
+                    <p className="mt-2 line-clamp-1 text-xs font-semibold text-gray-900 group-hover:text-amazon_blue transition-colors">{p.title || "Producto"}</p>
+                    <p className="text-sm font-extrabold text-gray-900">S/ {Number(p.price || 0).toFixed(2)} c/unidad</p>
+                  </Link>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -302,10 +379,33 @@ export default function Home({ productData, behavior }: Props) {
               <h2 className="text-base font-extrabold text-gray-900">Ofertas relámpago</h2>
               <Link href="/productos?ofertas=1" className="text-xs font-semibold text-[#cb299e]">Ver ofertas</Link>
             </div>
+          <div className="relative">
+            {/* Navigation buttons */}
+            <button
+              onClick={() => scrollMobile('left', 'offers')}
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 -translate-x-2 bg-white/90 backdrop-blur-sm rounded-full p-1.5 shadow-lg border border-gray-200 hover:bg-white hover:shadow-md transition-all duration-200"
+              aria-label="Anterior"
+            >
+              <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <button
+              onClick={() => scrollMobile('right', 'offers')}
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 translate-x-2 bg-white/90 backdrop-blur-sm rounded-full p-1.5 shadow-lg border border-gray-200 hover:bg-white hover:shadow-md transition-all duration-200"
+              aria-label="Siguiente"
+            >
+              <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+            
             <Products
               productData={mobileOfferProducts}
-              gridClass="grid-flow-col auto-cols-[72%] gap-3 snap-x snap-mandatory overflow-x-auto no-scrollbar pb-1"
+              gridClass="grid-flow-col auto-cols-[72%] gap-3 snap-x snap-mandatory overflow-x-auto no-scrollbar pb-1 scroll-smooth"
+              ref={offersCarouselRef}
             />
+          </div>
           </div>
 
           <div>
@@ -328,18 +428,50 @@ export default function Home({ productData, behavior }: Props) {
           </div>
         </section>
 
-        <div className="hidden md:block max-w-screen-2xl mx-auto space-y-10 md:space-y-12 pb-10 pt-6 md:pt-8">
+        <div className="hidden md:block max-w-screen-2xl mx-auto space-y-6 md:space-y-8 pb-10 pt-6">
         <section className="px-4 md:px-6">
-          <div className="mb-3">
+          <div className="flex items-center justify-between mb-3">
             <h2 className="text-xl font-semibold uppercase tracking-wide text-gray-900">
               Productos más comprados
             </h2>
+            <Link href="/productos" className="text-sm font-semibold text-amazon_blue hover:underline">
+              Ver todos
+            </Link>
           </div>
           {hasBehaviorData && realTopProducts.length > 0 ? (
-            <Products
-              productData={realTopProducts}
-              gridClass="grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-5"
-            />
+            <div className="relative">
+              {/* Desktop navigation buttons */}
+              <button
+                onClick={() => scrollDesktop('left', 'topProducts')}
+                className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 -translate-x-3 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg border border-gray-200 hover:bg-white hover:shadow-md transition-all duration-200"
+                aria-label="Anterior"
+              >
+                <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <button
+                onClick={() => scrollDesktop('right', 'topProducts')}
+                className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 translate-x-3 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg border border-gray-200 hover:bg-white hover:shadow-md transition-all duration-200"
+                aria-label="Siguiente"
+              >
+                <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+              
+              <div 
+                ref={topProductsRef}
+                className="flex gap-4 overflow-x-auto no-scrollbar pb-2"
+                style={{ scrollBehavior: 'smooth' }}
+              >
+                {realTopProducts.map((product) => (
+                  <div key={product._id} className="w-[200px] md:w-[250px] shrink-0">
+                    <Products productData={[product]} gridClass="grid-cols-1" />
+                  </div>
+                ))}
+              </div>
+            </div>
           ) : (
             <div className="p-1 text-sm text-gray-600">
               Aún no hay compras confirmadas para mostrar productos más comprados.
@@ -356,47 +488,43 @@ export default function Home({ productData, behavior }: Props) {
                 Ofertas relámpago
               </h2>
             </div>
+            <Link href="/productos?ofertas=1" className="text-sm font-semibold text-[#cb299e] hover:underline">
+              Ver todas
+            </Link>
           </div>
-          {offerProducts.length > 0 ? (
-            <div className="relative">
-              <div ref={offersRef} className="overflow-x-auto no-scrollbar scroll-smooth">
-                <Products
-                  productData={offerProducts}
-                  gridClass="grid-flow-col auto-cols-[78%] sm:auto-cols-[48%] md:auto-cols-[34%] lg:auto-cols-[25%] xl:auto-cols-[20%] gap-3 md:gap-4 snap-x snap-mandatory pb-1"
-                />
-              </div>
-              {canOfferScrollLeft && (
-                <button
-                  type="button"
-                  aria-label="Ver ofertas anteriores"
-                  onClick={() => offersRef.current?.scrollBy({ left: -320, behavior: "smooth" })}
-                  className="absolute left-0 top-1/2 z-10 -translate-y-1/2 h-10 w-10 rounded-full border border-gray-200 bg-white shadow-sm hover:bg-gray-50"
-                >
-                  <span className="sr-only">Anterior</span>
-                  <svg viewBox="0 0 24 24" className="h-5 w-5 mx-auto text-gray-700" aria-hidden="true">
-                    <path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </button>
-              )}
-              {canOfferScrollRight && (
-                <button
-                  type="button"
-                  aria-label="Ver más ofertas"
-                  onClick={() => offersRef.current?.scrollBy({ left: 320, behavior: "smooth" })}
-                  className="absolute right-0 top-1/2 z-10 -translate-y-1/2 h-10 w-10 rounded-full border border-gray-200 bg-white shadow-sm hover:bg-gray-50"
-                >
-                  <span className="sr-only">Siguiente</span>
-                  <svg viewBox="0 0 24 24" className="h-5 w-5 mx-auto text-gray-700" aria-hidden="true">
-                    <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </button>
-              )}
+          <div className="relative">
+            {/* Desktop navigation buttons */}
+            <button
+              onClick={() => scrollDesktop('left', 'offers')}
+              className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 -translate-x-3 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg border border-gray-200 hover:bg-white hover:shadow-md transition-all duration-200"
+              aria-label="Anterior"
+            >
+              <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <button
+              onClick={() => scrollDesktop('right', 'offers')}
+              className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 translate-x-3 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg border border-gray-200 hover:bg-white hover:shadow-md transition-all duration-200"
+              aria-label="Siguiente"
+            >
+              <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+            
+            <div 
+              ref={desktopOffersRef}
+              className="flex gap-4 overflow-x-auto no-scrollbar pb-2 scroll-smooth"
+              style={{ scrollBehavior: 'smooth' }}
+            >
+              {offerProducts.map((product) => (
+                <div key={product._id} className="w-[200px] md:w-[250px] shrink-0">
+                  <Products productData={[product]} gridClass="grid-cols-1" />
+                </div>
+              ))}
             </div>
-          ) : (
-            <div className="p-1 text-sm text-gray-600">
-              aún no hay productos en oferta disponibles
-            </div>
-          )}
+          </div>
         </section>
 
         {/* Explora tus intereses */}

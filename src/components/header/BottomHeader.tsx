@@ -1,4 +1,4 @@
-import { LuMenu } from "react-icons/lu";
+import { Bars3Icon } from "@heroicons/react/24/outline";
 import { StateProps } from "../../../type";
 import { signOut } from "next-auth/react";
 import { useSelector, useDispatch } from "react-redux";
@@ -70,10 +70,10 @@ const BottomHeader = () => {
       <div className="hidden md:flex items-center relative max-w-screen-2xl mx-auto px-3 sm:px-4 md:px-6 py-2 gap-4">
         <button
           onClick={() => setOpen((v) => !v)}
-          className="group inline-flex items-center gap-2.5 h-10 px-4 rounded-xl border border-gray-200 bg-gray-50 hover:border-amazon_blue hover:bg-white transition-colors"
+          className="group inline-flex items-center gap-2.5 h-10 px-4 rounded-xl border border-gray-200 bg-gray-50 hover:border-amazon_blue hover:bg-white hover:shadow-md transition-all duration-300"
         >
-          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 text-gray-700 group-hover:bg-amazon_blue group-hover:text-white transition-colors">
-            <LuMenu className="text-base" />
+          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 text-gray-700 group-hover:bg-amazon_blue group-hover:text-white transition-all duration-300">
+            <Bars3Icon className="w-4 h-4" />
           </span>
           <span className="font-medium text-[15px] text-gray-800">Ver categorías</span>
         </button>
@@ -111,24 +111,24 @@ const BottomHeader = () => {
           <nav className="inline-flex items-center gap-1 p-1">
             <Link
               href="/"
-              className={`inline-flex items-center h-9 px-4 rounded-lg text-[15px] transition-colors ${
-                isCurrentPath("/") ? "bg-amazon_blue text-white font-semibold" : "text-gray-700 hover:bg-gray-100"
+              className={`inline-flex items-center h-9 px-4 rounded-lg text-[15px] transition-all duration-300 ${
+                isCurrentPath("/") ? "bg-amazon_blue text-white font-semibold shadow-md" : "text-gray-700 hover:bg-gray-100 hover:shadow-sm"
               }`}
             >
               Inicio
             </Link>
             <Link
               href="/productos"
-              className={`inline-flex items-center h-9 px-4 rounded-lg text-[15px] transition-colors ${
-                isCurrentPath("/productos") ? "bg-amazon_blue text-white font-semibold" : "text-gray-700 hover:bg-gray-100"
+              className={`inline-flex items-center h-9 px-4 rounded-lg text-[15px] transition-all duration-300 ${
+                isCurrentPath("/productos") ? "bg-amazon_blue text-white font-semibold shadow-md" : "text-gray-700 hover:bg-gray-100 hover:shadow-sm"
               }`}
             >
               Productos
             </Link>
             <Link
               href="/blog"
-              className={`inline-flex items-center h-9 px-4 rounded-lg text-[15px] transition-colors ${
-                isCurrentPath("/blog") ? "bg-amazon_blue text-white font-semibold" : "text-gray-700 hover:bg-gray-100"
+              className={`inline-flex items-center h-9 px-4 rounded-lg text-[15px] transition-all duration-300 ${
+                isCurrentPath("/blog") ? "bg-amazon_blue text-white font-semibold shadow-md" : "text-gray-700 hover:bg-gray-100 hover:shadow-sm"
               }`}
             >
               Blog
@@ -137,8 +137,8 @@ const BottomHeader = () => {
               href="/capacitaciones"
               target="_blank"
               rel="noreferrer"
-              className={`inline-flex items-center h-9 px-4 rounded-lg text-[15px] transition-colors ${
-                isCurrentPath("/capacitaciones") ? "bg-amazon_blue text-white font-semibold" : "text-gray-700 hover:bg-gray-100"
+              className={`inline-flex items-center h-9 px-4 rounded-lg text-[15px] transition-all duration-300 ${
+                isCurrentPath("/capacitaciones") ? "bg-amazon_blue text-white font-semibold shadow-md" : "text-gray-700 hover:bg-gray-100 hover:shadow-sm"
               }`}
             >
               Capacitaciones
@@ -149,7 +149,7 @@ const BottomHeader = () => {
         <div className="shrink-0 flex items-center">
           <Link
             href="/productos?ofertas=1"
-            className="inline-flex items-center gap-1.5 h-11 px-2 text-[#c21885] transition-colors hover:opacity-90"
+            className="inline-flex items-center gap-1.5 h-11 px-2 text-[#c21885] transition-all duration-300 hover:opacity-90 hover:scale-105"
           >
             <span className="inline-flex items-center justify-center text-[24px] leading-none font-extrabold text-[#c21885] tracking-tight">
               10%

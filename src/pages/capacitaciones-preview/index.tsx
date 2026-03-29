@@ -131,8 +131,8 @@ export default function CapacitacionesPreviewPage() {
                     </div>
 
                     <div className="border-t border-dashed border-gray-200 bg-[#fafafa] p-4 md:border-l md:border-t-0 md:p-5">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Entrada</p>
-                      <p className="mt-1 text-3xl font-black text-[#111827]">S/ {course.price.toFixed(2)}</p>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Entrada general</p>
+                      <p className="mt-1 text-4xl font-black text-[#111827]">S/ {course.price.toFixed(2)}</p>
                       {typeof course.oldPrice === "number" ? (
                         <p className="text-sm text-gray-400 line-through">S/ {course.oldPrice.toFixed(2)}</p>
                       ) : null}
@@ -163,19 +163,7 @@ export default function CapacitacionesPreviewPage() {
   );
 }
 
-export const getServerSideProps: GetServerSideProps = async (ctx) => {
-  const session = await getServerSession(ctx.req, ctx.res, authOptions);
-  if (!session) {
-    return {
-      redirect: {
-        destination: `/sign-in?callbackUrl=${encodeURIComponent("/capacitaciones-preview")}`,
-        permanent: false,
-      },
-    };
-  }
-  if ((session.user as any)?.role !== "ADMIN") {
-    return { notFound: true };
-  }
+export const getServerSideProps: GetServerSideProps = async () => {
   return { props: {} };
 };
 

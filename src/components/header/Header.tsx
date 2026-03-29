@@ -1,8 +1,6 @@
 import Image from "next/image";
 import logo from "../../images/logo.jpg";
-import cartIcon from "@/images/cartlcon.png";
-import { HiOutlineSearch, HiOutlineUser } from "react-icons/hi";
-import { FaHeart } from "react-icons/fa";
+import { MagnifyingGlassIcon, UserIcon, HeartIcon, ShoppingCartIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useSelector, useDispatch } from "react-redux";
@@ -140,11 +138,11 @@ const Header = () => {
   const cartCount = isHydrated && productData ? productData.length : 0;
 
   return (
-    <div className="w-full bg-white text-black sticky top-0 z-50 border-b border-gray-200">
-      <div className="md:hidden px-3 pt-2 pb-3 border-b border-gray-100 bg-white/95 backdrop-blur">
+    <div className="w-full bg-white text-black sticky top-0 z-50 border-b border-gray-200 shadow-sm">
+      <div className="md:hidden px-3 pt-2 pb-3 border-b border-gray-100 bg-white/95 backdrop-blur-sm">
         <div className="flex items-center justify-between">
-          <Link href={"/"} onClick={handleLogoClick} className="flex items-center gap-2">
-            <div className="bg-white rounded-full p-1 shadow ring-1 ring-amazon_blue/20">
+          <Link href={"/"} onClick={handleLogoClick} className="flex items-center gap-2 group">
+            <div className="bg-white rounded-full p-1 shadow ring-1 ring-amazon_blue/20 group-hover:shadow-md transition-shadow duration-300">
               <Image className="h-9 w-9 object-contain rounded-full" src={logo} alt="Logo Rossy Resina" priority />
             </div>
             <div className="leading-tight">
@@ -154,10 +152,10 @@ const Header = () => {
           </Link>
 
           <div className="flex items-center gap-2">
-            <Link href="/favorite" className="relative p-2 rounded-full border border-gray-200 text-gray-700">
-              <FaHeart className="text-[18px]" />
+            <Link href="/favorite" className="relative p-2 rounded-full border border-gray-200 text-gray-700 hover:border-amazon_blue hover:text-amazon_blue hover:shadow-md transition-all duration-300">
+              <HeartIcon className="w-5 h-5" />
               {favoriteCount > 0 ? (
-                <span className="absolute -top-1 -right-1 bg-amazon_blue text-white text-[10px] rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-amazon_blue text-white text-[10px] rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center shadow-sm">
                   {favoriteCount}
                 </span>
               ) : null}
@@ -169,10 +167,10 @@ const Header = () => {
           <button
             type="button"
             onClick={() => setMobileSearchOpen(true)}
-            className="relative w-full h-11 rounded-xl pl-11 pr-4 text-left text-sm text-gray-500 border border-gray-200 bg-gray-50"
+            className="relative w-full h-11 rounded-xl pl-11 pr-4 text-left text-sm text-gray-500 border border-gray-200 bg-gray-50 hover:border-amazon_blue hover:bg-white transition-colors duration-300"
             aria-label="Abrir buscador"
           >
-            <HiOutlineSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
+            <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
             <span>{searchQuery || "Buscar moldes, resina, pigmentos..."}</span>
           </button>
         </div>
@@ -186,7 +184,7 @@ const Header = () => {
           className="px-2 cursor-pointer duration-300 flex items-center justify-center"
         >
           <div className="flex flex-col items-center md:flex-row md:items-center gap-1 md:gap-2">
-            <div className="bg-white rounded-full p-1.5 shadow-md ring-2 ring-amazon_blue/20">
+            <div className="bg-white rounded-full p-1.5 shadow-md ring-2 ring-amazon_blue/20 group-hover:shadow-lg transition-shadow duration-300">
               <Image className="h-12 w-12 md:h-14 md:w-14 object-contain rounded-full" src={logo} alt="Logo Rossy Resina" priority />
             </div>
             <span className="md:hidden text-sm leading-tight text-amazon_blue font-semibold">
@@ -207,7 +205,7 @@ const Header = () => {
             className="relative w-full h-10 rounded-full pl-10 pr-4 text-left text-sm text-gray-500 border border-gray-300 bg-white"
             aria-label="Abrir buscador"
           >
-            <HiOutlineSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
             <span>{searchQuery || "Buscar producto..."}</span>
           </button>
         </div>
@@ -218,11 +216,11 @@ const Header = () => {
             <input
               onChange={handleSearch}
               value={searchQuery}
-              className="w-full h-full rounded-full pl-4 pr-28 placeholder:text-xs text-sm text-black border border-gray-300 outline-none focus-visible:border-amazon_blue"
+              className="w-full h-full rounded-full pl-4 pr-28 placeholder:text-xs text-sm text-black border border-gray-300 outline-none focus-visible:border-amazon_blue focus:shadow-sm transition-all duration-300"
               type="text"
               placeholder="Buscar productos..."
             />
-            <button type="submit" className="absolute right-0 top-0 h-full px-5 rounded-full bg-amazon_blue text-white text-sm font-semibold hover:brightness-95">Buscar</button>
+            <button type="submit" className="absolute right-0 top-0 h-full px-5 rounded-full bg-amazon_blue text-white text-sm font-semibold hover:brightness-95 transition-all duration-300 hover:shadow-md">Buscar</button>
             {/* ========== Searchfield ========== */}
             {searchQuery && (
               <div className="absolute left-0 top-12 w-full mx-auto max-h-96 bg-gray-100 rounded-lg overflow-y-scroll cursor-pointer text-black border border-gray-200">
@@ -273,7 +271,7 @@ const Header = () => {
             className="md:hidden p-2 rounded-full border border-gray-200 text-gray-700 hover:text-amazon_blue hover:border-amazon_blue"
             aria-label={userInfo ? "Ir a mi perfil" : "Iniciar sesión"}
           >
-            <HiOutlineUser className="text-xl" />
+            <UserIcon className="w-5 h-5" />
           </Link>
 
           <div className="relative hidden md:block" ref={profileRef}>
@@ -284,7 +282,7 @@ const Header = () => {
               aria-haspopup="menu"
               aria-expanded={profileOpen}
             >
-              <HiOutlineUser className="text-xl" />
+              <UserIcon className="w-5 h-5" />
               <div className="leading-tight text-left">
                 <div className="text-xs text-gray-500">Cuenta</div>
                 <div className="font-semibold">Mi perfil</div>
@@ -352,7 +350,7 @@ const Header = () => {
             href="/favorite"
             className="hidden md:flex items-center gap-2 text-sm text-gray-700 hover:text-amazon_blue relative"
           >
-            <FaHeart className="text-xl" />
+            <HeartIcon className="w-5 h-5" />
             {favoriteCount > 0 && (
               <span className="absolute -top-2 left-3 bg-amazon_blue text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center">
                 {favoriteCount}
@@ -372,11 +370,7 @@ const Header = () => {
           >
             <span className="flex items-center gap-2 relative">
               <div className="relative">
-                <Image
-                  className="h-10 w-10 object-contain"
-                  src={cartIcon}
-                  alt="carrito"
-                />
+                <ShoppingCartIcon className="w-8 h-8 text-gray-700" />
                 <span className="absolute -top-2 -right-2 bg-amazon_blue text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center">
                   {cartCount}
                 </span>
@@ -413,7 +407,7 @@ const Header = () => {
                   type="text"
                   placeholder="Buscar producto..."
                 />
-                <HiOutlineSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
               </div>
             </div>
 
