@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { XMarkIcon, PaperAirplaneIcon, SparklesIcon } from "@heroicons/react/24/outline";
+import Image from "next/image";
 
 type Message = { role: "assistant" | "user"; text: string; time: string };
 
@@ -84,8 +85,8 @@ export default function AssistantRossy() {
 
           {/* Header */}
           <div className="flex items-center gap-3 px-4 py-3 shrink-0" style={{ background: "linear-gradient(135deg, #6E2CA1, #cb299e)" }}>
-            <div className="h-9 w-9 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-              <SparklesIcon className="h-5 w-5 text-white" />
+            <div className="h-9 w-9 rounded-full overflow-hidden shrink-0 border-2 border-white/30">
+              <Image src="/favicon-96x96.png" alt="Rossy Resina" width={36} height={36} className="h-full w-full object-cover" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-white">Asistente Rossy</p>
@@ -104,8 +105,8 @@ export default function AssistantRossy() {
             {messages.map((m, i) => (
               <div key={i} className={`flex gap-2 ${m.role === "user" ? "flex-row-reverse" : "flex-row"}`}>
                 {m.role === "assistant" && (
-                  <div className="h-7 w-7 rounded-full shrink-0 flex items-center justify-center text-white text-xs font-bold mt-1" style={{ background: "linear-gradient(135deg, #6E2CA1, #cb299e)" }}>
-                    R
+                  <div className="h-7 w-7 rounded-full shrink-0 overflow-hidden border border-purple-200 mt-1">
+                    <Image src="/favicon-96x96.png" alt="Rossy" width={28} height={28} className="h-full w-full object-cover" />
                   </div>
                 )}
                 <div className={`max-w-[78%] ${m.role === "user" ? "items-end" : "items-start"} flex flex-col gap-0.5`}>
@@ -125,7 +126,9 @@ export default function AssistantRossy() {
 
             {loading && (
               <div className="flex gap-2">
-                <div className="h-7 w-7 rounded-full shrink-0 flex items-center justify-center text-white text-xs font-bold" style={{ background: "linear-gradient(135deg, #6E2CA1, #cb299e)" }}>R</div>
+                <div className="h-7 w-7 rounded-full shrink-0 overflow-hidden border border-purple-200">
+                  <Image src="/favicon-96x96.png" alt="Rossy" width={28} height={28} className="h-full w-full object-cover" />
+                </div>
                 <div className="bg-white rounded-2xl rounded-tl-none px-4 py-3 shadow-sm border border-gray-100 flex items-center gap-1">
                   <span className="h-1.5 w-1.5 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "0ms" }} />
                   <span className="h-1.5 w-1.5 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "150ms" }} />
@@ -182,10 +185,10 @@ export default function AssistantRossy() {
       <button
         onClick={handleOpen}
         aria-label="Abrir asistente Rossy"
-        className="flex h-14 w-14 items-center justify-center rounded-full text-white shadow-lg transition-all duration-300 hover:scale-110"
+        className="flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-all duration-300 hover:scale-110 overflow-hidden border-2 border-white"
         style={{ background: "linear-gradient(135deg, #6E2CA1, #cb299e)" }}
       >
-        <SparklesIcon className="h-7 w-7" />
+        <Image src="/favicon-96x96.png" alt="Asistente Rossy" width={56} height={56} className="h-full w-full object-cover" />
       </button>
     </div>
   );
