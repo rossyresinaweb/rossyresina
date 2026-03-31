@@ -118,7 +118,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    // Construir historial de conversación
     const chatHistory = history.map((m: { role: string; text: string }) => ({
       role: m.role === "user" ? "user" : "model",
       parts: [{ text: m.text }],
@@ -127,7 +126,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const chat = model.startChat({
       history: [
         { role: "user",  parts: [{ text: SYSTEM_PROMPT }] },
-        { role: "model", parts: [{ text: "Entendido. Soy Asistente Rossy, experta en resina y artesanía. Estoy lista para ayudar con respuestas precisas y prácticas." }] },
+        { role: "model", parts: [{ text: "Entendido. Soy Asistente Rossy, experta en resina y artesan\u00eda. Estoy lista para ayudar con respuestas precisas y pr\u00e1cticas." }] },
         ...chatHistory,
       ],
     });
@@ -137,7 +136,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     return res.status(200).json({ answer });
   } catch (e: any) {
-    console.error("Gemini error:", e?.message);
-    return res.status(500).json({ error: "No se pudo procesar tu pregunta. Intenta de nuevo." });
+    const errMsg = String(e?.message || e?.toString() || "unknown");
+    console.error("Gemini error:", errMsg);
+
+    // Devolver el error real para poder diagnosticarlo
+    return res.status(500).json({
+      error: "No se pudo procesar tu pregunta. Intenta de nuevo.",
+      detail: errMsg,
+    });
   }
 }

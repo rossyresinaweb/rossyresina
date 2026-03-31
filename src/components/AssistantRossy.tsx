@@ -56,6 +56,10 @@ export default function AssistantRossy() {
       const history = newMessages.slice(1).map((m) => ({ role: m.role, text: m.text }));
       const res  = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: msg, history: history.slice(0, -1) }) });
       const data = await res.json();
+      if (!res.ok) {
+        setMessages((prev) => [...prev, { role: "assistant", text: `Error: ${data.detail || data.error || "Intenta de nuevo"}`, time: now() }]);
+        return;
+      }
       setMessages((prev) => [...prev, { role: "assistant", text: data.answer || "Lo siento, no pude procesar tu pregunta.", time: now() }]);
     } catch {
       setMessages((prev) => [...prev, { role: "assistant", text: "Hubo un error al conectar. Por favor intenta de nuevo. 🙏", time: now() }]);
