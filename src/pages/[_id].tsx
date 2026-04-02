@@ -33,6 +33,7 @@ type Review = {
 
 const DynamicPage = ({ product, recs }: Props) => {
   const [qty, setQty] = useState(1);
+  const [selectedVariant, setSelectedVariant] = useState<any>(null);
   const [justAdded, setJustAdded] = useState(false);
   const addNoticeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [activeImage, setActiveImage] = useState<string | null>(null);
@@ -116,6 +117,9 @@ const DynamicPage = ({ product, recs }: Props) => {
       : null;
   const activeViewerIsProcess = isProcessImage(activeViewerImage || undefined);
   const hasOffer = typeof product?.oldPrice === "number" && Number(product.oldPrice) > Number(product?.price || 0);
+  const productVariants: any[] = (product as any)?.variants || [];
+  const activePrice = selectedVariant ? selectedVariant.price : Number(product?.price || 0);
+  const activeOldPrice = selectedVariant ? selectedVariant.oldPrice : (typeof product?.oldPrice === "number" ? product.oldPrice : null);
   const displayProductTitle = formatProductTitle(product?.title || product?.code || "Producto");
 
   const openImageViewer = (img: string) => {
@@ -655,20 +659,40 @@ const DynamicPage = ({ product, recs }: Props) => {
                 </div>
                 <div className="mt-4 flex items-center gap-3">
                   <span className="text-2xl font-semibold text-gray-900">
-                    <FormattedPrice amount={Number(product.price) || 0} />
+                    <FormattedPrice amount={activePrice} />
                   </span>
                   <span className="text-sm font-normal text-gray-500">c/unidad</span>
-                  {typeof product.oldPrice === "number" && product.oldPrice > product.price && (
+                  {activeOldPrice && Number(activeOldPrice) > activePrice && (
                     <span className="text-sm line-through text-gray-400">
-                      <FormattedPrice amount={Number(product.oldPrice) || 0} />
+                      <FormattedPrice amount={Number(activeOldPrice)} />
                     </span>
                   )}
-                  {typeof product.oldPrice === "number" && product.oldPrice > product.price && (
-                    <span className="text-xs px-2 py-1 rounded-full bg-orange-100 text-orange-600">
-                      Descuento
-                    </span>
+                  {activeOldPrice && Number(activeOldPrice) > activePrice && (
+                    <span className="text-xs px-2 py-1 rounded-full bg-orange-100 text-orange-600">Descuento</span>
                   )}
                 </div>
+
+                {productVariants.length > 0 && (
+                  <div className="mt-4">
+                    <p className="text-sm font-semibold text-gray-700 mb-2">Presentación:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {productVariants.map((v: any) => (
+                        <button
+                          key={v.id}
+                          type="button"
+                          onClick={() => setSelectedVariant(selectedVariant?.id === v.id ? null : v)}
+                          className={`px-3 py-1.5 rounded-full border text-sm font-semibold transition ${
+                            selectedVariant?.id === v.id
+                              ? "bg-slate-900 text-white border-slate-900"
+                              : "border-gray-300 text-gray-700 hover:border-slate-900"
+                          }`}
+                        >
+                          {v.label} — S/ {Number(v.price).toFixed(2)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <div className="mt-3 text-sm text-emerald-700">
                   <a
                     href="#"
@@ -693,6 +717,12 @@ const DynamicPage = ({ product, recs }: Props) => {
                 <div className="mt-3 text-sm text-orange-700">
                   {"Ideal para emprender: crea piezas para vender y recuperar tu inversión rápido."}
                 </div>
+
+                {product.description && (
+                  <div className="mt-4 text-sm text-gray-700 whitespace-pre-line">
+                    {product.description}
+                  </div>
+                )}
 
                 <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
                   <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-widest mb-2">Información del producto</h4>

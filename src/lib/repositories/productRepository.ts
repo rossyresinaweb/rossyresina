@@ -15,20 +15,6 @@ const productBaseSelect = {
   isNew: true,
   stock: true,
 };
-const productLegacySelect = {
-  id: true,
-  legacyId: true,
-  code: true,
-  title: true,
-  description: true,
-  brand: true,
-  category: true,
-  image: true,
-  price: true,
-  oldPrice: true,
-  isNew: true,
-};
-
 const normalizeImages = (images: any): string[] => {
   if (Array.isArray(images)) return images.map((x) => String(x || "").trim()).filter(Boolean);
   if (typeof images === "string") {
@@ -82,20 +68,11 @@ const toSerializable = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as 
 
 export async function getAllProducts(): Promise<ProductProps[]> {
   try {
-    let dbRows: any[] = [];
-    try {
-      dbRows = await (prisma as any).product.findMany({
-        orderBy: { createdAt: "desc" },
-        select: { ...productBaseSelect, images: true },
-      });
-    } catch {
-      dbRows = await (prisma as any).product.findMany({
-        orderBy: { createdAt: "desc" },
-        select: productLegacySelect,
-      });
-    }
-    const normalizedDbRows = (dbRows || []).map(toLegacyFromDb);
-    return toSerializable(normalizedDbRows);
+    const dbRows = await (prisma as any).product.findMany({
+      orderBy: { createdAt: "desc" },
+      select: { ...productBaseSelect, images: true },
+    });
+    return toSerializable((dbRows || []).map(toLegacyFromDb));
   } catch {
     return [];
   }

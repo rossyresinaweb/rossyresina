@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import type { GetServerSideProps } from "next";
 import Image from "next/image";
+import ProductVariants, { type Variant } from "@/components/admin/ProductVariants";
 
 const normalizeUrls = (value: any): string[] => {
   if (!Array.isArray(value)) return [];
@@ -53,6 +54,7 @@ export default function NewProduct() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [saveOk, setSaveOk] = useState("");
+  const [variants, setVariants] = useState<Variant[]>([]);
   const [categories, setCategories] = useState<Array<{ _id: number; name: string; slug: string }>>([]);
 
   const galleryImages = useMemo(() => normalizeUrls(form.images), [form.images]);
@@ -100,8 +102,19 @@ export default function NewProduct() {
         const json = await res.json().catch(() => ({}));
         throw new Error(String(json?.error || "No se pudo guardar el producto."));
       }
-      setForm(payload);
+      const created = await res.json();
       setSaveOk("Producto guardado correctamente.");
+      if (variants.length > 0) {
+        const productId = created._id || created.id;
+        await Promise.all(variants.map((v) =>
+          fetch("/api/products/variants", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ productId, ...v }),
+          })
+        ));
+      }
+      setTimeout(() => router.push("/admin"), 1000);
     } catch (err: any) {
       setSaveError(err?.message || "Error al guardar.");
     } finally {
@@ -278,6 +291,10 @@ export default function NewProduct() {
               <span>Nuevo</span>
             </label>
           </div>
+
+          {form.category === "Resinas" && (
+            <ProductVariants variants={variants} onChange={setVariants} />
+          )}
 
           <div className="space-y-3 border-t border-gray-100 pt-4">
             {saveError ? <p className="text-sm text-red-600">{saveError}</p> : null}

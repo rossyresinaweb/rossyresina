@@ -53,7 +53,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!email) return res.status(400).json({ error: "Correo requerido" });
     if (!emailRegex.test(email)) return res.status(400).json({ error: "Correo invalido" });
 
-    const result = addNewsletterSubscriber(email);
+    const result = await addNewsletterSubscriber(email);
     if (!result.ok) return res.status(400).json({ error: "No se pudo suscribir" });
 
     const mailResult = await sendConfirmationEmail(email);

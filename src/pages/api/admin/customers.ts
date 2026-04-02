@@ -13,7 +13,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const q = String(req.query.q || "").trim().toLowerCase();
-  const rows = readCustomers();
+  const rows = await readCustomers();
   const filtered = q
     ? rows.filter((c) => {
         return (

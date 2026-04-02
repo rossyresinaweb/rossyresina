@@ -142,12 +142,7 @@ useEffect(() => {
       heading: "Resina Epóxica Profesional",
       subheading: "Calidad superior para tus proyectos creativos",
       button: "Explorar productos",
-      items: currentProducts.remate.length > 0 ? currentProducts.remate : [
-        { label: "S/35.90", image: "/products/molde_boton1.avif", title: "Resina Epóxica Premium" },
-        { label: "S/28.50", image: "/products/molde_boton2.avif", title: "Kit de Inicio Resina" },
-        { label: "S/42.30", image: "/products/molde_pigmento.avif", title: "Resina UV Rápida" },
-        { label: "S/18.75", image: "/products/molde_lapicero_1.avif", title: "Endurecedor Profesional" },
-      ],
+      items: currentProducts.remate,
     },
     {
       id: 1,
@@ -155,12 +150,7 @@ useEffect(() => {
       heading: "Moldes de Silicona Premium",
       subheading: "Diseños exclusivos para bisutería y decoración",
       button: "Ver colección",
-      items: currentProducts.topVisited.length > 0 ? currentProducts.topVisited : [
-        { label: "S/15.90", image: "/products/molde_pigmento.avif", title: "Molde Geométrico" },
-        { label: "S/12.50", image: "/products/molde_lapicero_1.avif", title: "Molde Floral" },
-        { label: "S/22.80", image: "/products/molde_5.avif", title: "Molde Abstracto" },
-        { label: "S/19.90", image: "/products/molde_6.avif", title: "Molde Corazón" },
-      ],
+      items: currentProducts.topVisited,
     },
     {
       id: 2,
@@ -168,12 +158,7 @@ useEffect(() => {
       heading: "Pigmentos y Efectos Especiales",
       subheading: "Dale vida y color a tus creaciones",
       button: "Descubrir colores",
-      items: currentProducts.mold.length > 0 ? currentProducts.mold : [
-        { label: "S/18.90", image: "/products/molde_5.avif", title: "Set de Pigmentos Metálicos" },
-        { label: "S/22.50", image: "/products/molde_6.avif", title: "Polvo de Mica Brillante" },
-        { label: "S/16.75", image: "/products/molde_7.avif", title: "Colorantes Líquidos" },
-        { label: "S/31.20", image: "/products/molde_boton1.avif", title: "Efectos Especiales" },
-      ],
+      items: currentProducts.mold,
     },
   ];
 
@@ -245,7 +230,10 @@ useEffect(() => {
             {/* Enhanced products section */}
             <div className="col-span-12 md:col-span-7 flex justify-center items-center">
               <div className="flex gap-3 md:gap-4 justify-center flex-wrap">
-                {activeSlide.items.map((item: any, idx: number) => (
+                {activeSlide.items.length === 0 ? (
+                  <p className="text-white/70 text-sm">Agrega productos desde el panel admin para verlos aquí.</p>
+                ) : (
+                  activeSlide.items.map((item: any, idx: number) => (
                   <div key={idx} className="group relative w-[120px] md:w-[160px]">
                     {/* Enhanced product card */}
                     <div className="relative rounded-2xl border border-white/30 bg-white/95 backdrop-blur-md p-2 shadow-2xl transition-all duration-500 hover:shadow-3xl hover:scale-105 hover:-translate-y-2">
@@ -279,7 +267,8 @@ useEffect(() => {
                       </div>
                     </div>
                   </div>
-                ))}
+                  ))
+                )}}
               </div>
             </div>
           </div>

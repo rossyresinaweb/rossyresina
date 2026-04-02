@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import Groq from "groq-sdk";
 
 const SYSTEM_PROMPT = `Eres "Asistente Rossy", una experta en resina epóxica, eco resina, moldes de silicona y artesanía de la tienda Rossy Resina (Perú). Tu misión es ayudar a resineras y artesanos con respuestas precisas, prácticas y detalladas.
 
@@ -111,32 +111,32 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (!message) return res.status(400).json({ error: "Mensaje vacío" });
 
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) return res.status(500).json({ error: "API key no configurada" });
 
   try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const groq = new Groq({ apiKey });
 
     const chatHistory = history.map((m: { role: string; text: string }) => ({
-      role: m.role === "user" ? "user" : "model",
-      parts: [{ text: m.text }],
+      role: m.role === "user" ? "user" : "assistant" as const,
+      content: m.text,
     }));
 
-    const chat = model.startChat({
-      history: [
-        { role: "user",  parts: [{ text: SYSTEM_PROMPT }] },
-        { role: "model", parts: [{ text: "Entendido. Soy Asistente Rossy, experta en resina y artesan\u00eda. Estoy lista para ayudar con respuestas precisas y pr\u00e1cticas." }] },
+    const completion = await groq.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
         ...chatHistory,
+        { role: "user", content: message },
       ],
+      max_tokens: 500,
+      temperature: 0.7,
     });
 
-    const result = await chat.sendMessage(message);
-    const answer = result.response.text();
-
+    const answer = completion.choices[0]?.message?.content || "Lo siento, no pude generar una respuesta.";
     return res.status(200).json({ answer });
   } catch (e: any) {
-    console.error("Gemini error:", String(e?.message || ""));
+    console.error("Groq error:", String(e?.message || ""));
     return res.status(500).json({ error: "No se pudo procesar tu pregunta. Intenta de nuevo." });
   }
 }

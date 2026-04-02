@@ -1,6 +1,6 @@
 import Head from "next/head";
 import Link from "next/link";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { videos, shorts, type VideoItem } from "@/data/capacitaciones";
 import {
   MagnifyingGlassIcon,
@@ -16,8 +16,20 @@ import {
   ClockIcon,
   CalendarDaysIcon,
   FilmIcon,
+  UserGroupIcon,
 } from "@heroicons/react/24/outline";
 import { courseCatalog, getCourseAvailability, type CourseMode } from "@/lib/courseCatalog";
+
+type TallerSlot = {
+  id: string;
+  cursoNombre: string;
+  cursoNivel: string;
+  fecha: string;
+  duracionHoras: number;
+  precio: number;
+  cupoMax: number;
+  inscripciones: { id: string }[];
+};
 
 const formatDate = (v: string) => new Date(v).toLocaleDateString("es-PE", { weekday: "short", day: "2-digit", month: "short" });
 const formatTime = (v: string) => new Date(v).toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" });
@@ -58,30 +70,102 @@ function VideoCard({ v }: { v: VideoItem }) {
 }
 
 export default function CapacitacionesPage() {
-  const [activeTab, setActiveTab] = useState<"videos" | "shorts" | "cursos">("videos");
+  const [activeTab, setActiveTab] = useState<"videos" | "shorts" | "cursos" | "talleres">("videos");
   const [activeTag, setActiveTag] = useState("Todos");
   const [query, setQuery] = useState("");
   const [courseMode, setCourseMode] = useState<"Todos" | CourseMode>("Todos");
   const [courseQuery, setCourseQuery] = useState("");
+  const [adminCourses, setAdminCourses] = useState<any[]>([]);
+  const [adminVideos, setAdminVideos] = useState<any[]>([]);
+  const [adminShorts, setAdminShorts] = useState<any[]>([]);
+
+  // Talleres
+  const [slots, setSlots] = useState<TallerSlot[]>([]);
+  const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
+  const [form, setForm] = useState({ nombre: "", email: "", telefono: "", notas: "" });
+  const [sending, setSending] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [formError, setFormError] = useState("");
+
+  useEffect(() => {
+    try {
+      const c = localStorage.getItem("rr_admin_courses");
+      if (c) setAdminCourses(JSON.parse(c));
+      const v = localStorage.getItem("rr_admin_videos");
+      if (v) setAdminVideos(JSON.parse(v));
+      const s = localStorage.getItem("rr_admin_shorts");
+      if (s) setAdminShorts(JSON.parse(s));
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === "talleres") {
+      fetch("/api/talleres/slots").then((r) => r.json()).then(setSlots).catch(() => {});
+    }
+  }, [activeTab]);
+
+  const handleInscribirse = async () => {
+    if (!selectedSlot || !form.nombre.trim() || !form.email.trim() || !form.telefono.trim()) {
+      setFormError("Por favor completa nombre, email y teléfono.");
+      return;
+    }
+    setSending(true);
+    setFormError("");
+    const res = await fetch("/api/talleres/inscripciones", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slotId: selectedSlot, ...form }),
+    });
+    setSending(false);
+    if (res.ok) {
+      setSuccess(true);
+      setForm({ nombre: "", email: "", telefono: "", notas: "" });
+      setSelectedSlot(null);
+      // Refrescar slots
+      fetch("/api/talleres/slots").then((r) => r.json()).then(setSlots).catch(() => {});
+    } else {
+      const data = await res.json();
+      setFormError(data.error || "Error al inscribirse");
+    }
+  };
+
+  // Agrupar slots por semana
+  const slotsByWeek = useMemo(() => {
+    const available = slots.filter((s) => s.inscripciones.length < s.cupoMax);
+    const groups: Record<string, TallerSlot[]> = {};
+    available.forEach((s) => {
+      const d = new Date(s.fecha);
+      const monday = new Date(d);
+      monday.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+      const key = monday.toISOString().slice(0, 10);
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(s);
+    });
+    return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
+  }, [slots]);
+
+  const allCourses = useMemo(() => [...courseCatalog, ...adminCourses], [adminCourses]);
+  const allVideos = useMemo(() => [...videos, ...adminVideos], [adminVideos]);
+  const allShorts = useMemo(() => [...shorts, ...adminShorts], [adminShorts]);
 
   const filteredCourses = useMemo(() => {
     const q = courseQuery.trim().toLowerCase();
-    return courseCatalog.filter((course) => {
+    return allCourses.filter((course) => {
       const matchMode = courseMode === "Todos" || course.mode === courseMode;
       if (!matchMode) return false;
       if (!q) return true;
       return `${course.title} ${course.summary} ${course.city} ${course.level}`.toLowerCase().includes(q);
     });
-  }, [courseQuery, courseMode]);
+  }, [courseQuery, courseMode, allCourses]);
 
   const filtered = useMemo(() => {
-    return videos.filter((v) => {
+    return allVideos.filter((v) => {
       const matchTag = activeTag === "Todos" || v.tag === activeTag;
       const q = query.trim().toLowerCase();
       const matchQuery = !q || v.title.toLowerCase().includes(q) || v.desc.toLowerCase().includes(q);
       return matchTag && matchQuery;
     });
-  }, [activeTag, query]);
+  }, [activeTag, query, allVideos]);
 
   return (
     <>
@@ -137,13 +221,13 @@ export default function CapacitacionesPage() {
               Shorts
             </button>
             <button
-              onClick={() => setActiveTab("cursos")}
+              onClick={() => setActiveTab("talleres")}
               className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition flex items-center gap-1 ${
-                activeTab === "cursos" ? "bg-gray-900 text-white border-gray-900" : "border-gray-300 text-gray-600 hover:text-gray-900"
+                activeTab === "talleres" ? "bg-rose-600 text-white border-rose-600" : "border-gray-300 text-gray-600 hover:text-gray-900"
               }`}
             >
               <CalendarDaysIcon className="w-4 h-4" />
-              Cursos en vivo
+              Talleres
             </button>
           </div>
         </header>
@@ -154,6 +238,7 @@ export default function CapacitacionesPage() {
             <SidebarItem active={activeTab === "videos"} onClick={() => setActiveTab("videos")} icon={<HomeIcon className="w-6 h-6" />} label="Inicio" />
             <SidebarItem active={activeTab === "shorts"} onClick={() => setActiveTab("shorts")} icon={<FilmIcon className="w-6 h-6" />} label="Shorts" />
             <SidebarItem active={activeTab === "cursos"} onClick={() => setActiveTab("cursos")} icon={<AcademicCapIcon className="w-6 h-6" />} label="Cursos" />
+            <SidebarItem active={activeTab === "talleres"} onClick={() => setActiveTab("talleres")} icon={<CalendarDaysIcon className="w-6 h-6" />} label="Talleres" />
             <SidebarItem icon={<BeakerIcon className="w-6 h-6" />} label="Resina" />
             <SidebarItem icon={<SwatchIcon className="w-6 h-6" />} label="Pigmentos" />
             <SidebarItem icon={<Square2StackIcon className="w-6 h-6" />} label="Moldes" />
@@ -199,7 +284,7 @@ export default function CapacitacionesPage() {
               </>
             ) : activeTab === "shorts" ? (
               <div className="px-4 py-5">
-                {shorts.length === 0 ? (
+                {allShorts.length === 0 ? (
                   <div className="py-20 text-center text-gray-500">
                     <FilmIcon className="w-12 h-12 mx-auto mb-3 text-gray-300" />
                     <p className="text-sm font-semibold">Próximamente</p>
@@ -207,7 +292,7 @@ export default function CapacitacionesPage() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-                    {shorts.map((s) => (
+                    {allShorts.map((s) => (
                       <div key={s.id} className="flex flex-col gap-2">
                         <div className="relative w-full aspect-[9/16] rounded-xl overflow-hidden bg-gray-800 flex flex-col items-center justify-center">
                           <FilmIcon className="w-8 h-8 text-gray-600" />
@@ -301,6 +386,107 @@ export default function CapacitacionesPage() {
                     </div>
                   )}
                 </div>
+              </div>
+            ) : activeTab === "talleres" ? (
+              <div className="px-4 py-5 max-w-2xl mx-auto">
+                <div className="mb-6">
+                  <h2 className="text-xl font-extrabold text-gray-900">Talleres con Rossy</h2>
+                  <p className="text-sm text-gray-500 mt-1">Elige el horario que más te convenga y reserva tu lugar. Máximo 6 personas por taller.</p>
+                </div>
+
+                {success && (
+                  <div className="mb-5 rounded-xl bg-emerald-50 border border-emerald-200 p-4 text-sm text-emerald-800 font-semibold">
+                    ✅ ¡Inscripción exitosa! Rossy se pondrá en contacto contigo por WhatsApp para confirmar los detalles.
+                    <button onClick={() => setSuccess(false)} className="ml-3 text-xs underline">Cerrar</button>
+                  </div>
+                )}
+
+                {slotsByWeek.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-gray-300 bg-white p-10 text-center text-gray-500">
+                    <CalendarDaysIcon className="w-10 h-10 mx-auto mb-2 text-gray-300" />
+                    <p className="text-sm font-semibold">No hay horarios disponibles por ahora</p>
+                    <p className="text-xs text-gray-400 mt-1">Vuelve pronto, Rossy publicará nuevas fechas.</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-6">
+                    {slotsByWeek.map(([weekKey, weekSlots]) => {
+                      const weekStart = new Date(weekKey + "T00:00:00");
+                      const weekEnd = new Date(weekStart);
+                      weekEnd.setDate(weekStart.getDate() + 6);
+                      const label = `Semana del ${weekStart.toLocaleDateString("es-PE", { day: "2-digit", month: "long" })} al ${weekEnd.toLocaleDateString("es-PE", { day: "2-digit", month: "long" })}`;
+                      return (
+                        <div key={weekKey}>
+                          <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">{label}</p>
+                          <div className="grid gap-3">
+                            {weekSlots.map((slot) => {
+                              const inscritas = slot.inscripciones.length;
+                              const vacantes = slot.cupoMax - inscritas;
+                              const isSelected = selectedSlot === slot.id;
+                              return (
+                                <div key={slot.id} className={`rounded-xl border-2 transition cursor-pointer ${isSelected ? "border-rose-500 bg-rose-50" : "border-gray-200 bg-white hover:border-rose-300"}`}
+                                  onClick={() => { setSelectedSlot(isSelected ? null : slot.id); setSuccess(false); setFormError(""); }}
+                                >
+                                  <div className="flex items-center gap-4 p-4">
+                                    <div className="shrink-0 text-center w-12">
+                                      <p className="text-xs font-semibold text-gray-500 uppercase">{new Date(slot.fecha).toLocaleDateString("es-PE", { weekday: "short" })}</p>
+                                      <p className="text-2xl font-black text-gray-900 leading-none">{new Date(slot.fecha).getDate()}</p>
+                                      <p className="text-xs text-gray-500">{new Date(slot.fecha).toLocaleDateString("es-PE", { month: "short" })}</p>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-bold text-gray-900">{slot.cursoNombre}</p>
+                                      <p className="text-xs text-gray-500">{new Date(slot.fecha).toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" })} · {slot.duracionHoras}h · Nivel {slot.cursoNivel}</p>
+                                      <div className="mt-1 flex gap-2 items-center">
+                                        <span className="text-sm font-extrabold text-gray-900">S/ {Number(slot.precio).toFixed(2)}</span>
+                                        <span className="flex items-center gap-1 text-xs text-emerald-700 font-semibold">
+                                          <UserGroupIcon className="w-3.5 h-3.5" /> {vacantes} lugar{vacantes !== 1 ? "es" : ""} disponible{vacantes !== 1 ? "s" : ""}
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <div className={`shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${isSelected ? "border-rose-500 bg-rose-500" : "border-gray-300"}`}>
+                                      {isSelected && <span className="w-2 h-2 rounded-full bg-white" />}
+                                    </div>
+                                  </div>
+
+                                  {isSelected && (
+                                    <div className="border-t border-rose-200 px-4 pb-4 pt-3" onClick={(e) => e.stopPropagation()}>
+                                      <p className="text-xs font-bold text-gray-700 mb-3">Completa tus datos para reservar</p>
+                                      <div className="grid gap-2 sm:grid-cols-2">
+                                        <div>
+                                          <label className="text-xs font-semibold text-gray-600">Nombre completo *</label>
+                                          <input value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-rose-500" placeholder="Tu nombre" />
+                                        </div>
+                                        <div>
+                                          <label className="text-xs font-semibold text-gray-600">WhatsApp *</label>
+                                          <input value={form.telefono} onChange={(e) => setForm({ ...form, telefono: e.target.value })} className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-rose-500" placeholder="+51 999 999 999" />
+                                        </div>
+                                        <div className="sm:col-span-2">
+                                          <label className="text-xs font-semibold text-gray-600">Email *</label>
+                                          <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-rose-500" placeholder="tu@email.com" />
+                                        </div>
+                                        <div className="sm:col-span-2">
+                                          <label className="text-xs font-semibold text-gray-600">Notas (opcional)</label>
+                                          <input value={form.notas} onChange={(e) => setForm({ ...form, notas: e.target.value })} className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-rose-500" placeholder="Alguna consulta o comentario" />
+                                        </div>
+                                      </div>
+                                      {formError && <p className="mt-2 text-xs text-red-600">{formError}</p>}
+                                      <button
+                                        onClick={handleInscribirse}
+                                        disabled={sending}
+                                        className="mt-3 w-full h-11 rounded-xl bg-rose-600 text-white text-sm font-bold hover:bg-rose-700 disabled:opacity-60"
+                                      >
+                                        {sending ? "Reservando..." : "🎨 Reservar mi lugar"}
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             ) : null}
           </main>

@@ -86,6 +86,7 @@ model Product {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   reviews     Review[]
+  variants    ProductVariant[]
 }
 
 model Order {
@@ -108,6 +109,19 @@ model Order {
 
   @@index([customerEmail])
   @@index([status])
+}
+
+model ProductVariant {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  label     String   // ej: "1kg", "2kg", "Galón (4kg)"
+  price     Decimal  @db.Decimal(10, 2)
+  oldPrice  Decimal? @db.Decimal(10, 2)
+  stock     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([productId])
 }
 
 model Review {
@@ -177,4 +191,103 @@ model VisitExcludedIp {
   ip        String   @id
   note      String?
   createdAt DateTime @default(now())
+}
+
+// Curso/taller creado por Rossy con múltiples fechas disponibles
+model Curso {
+  id             String       @id @default(cuid())
+  nombre         String
+  nivel          String       @default("Basico")
+  descripcion    String       @default("")
+  modalidad      String       @default("Presencial")
+  ciudad         String       @default("")
+  sede           String       @default("")
+  duracionHoras  Int          @default(2)
+  precio         Decimal      @db.Decimal(10, 2)
+  precioAnterior Decimal?     @db.Decimal(10, 2)
+  cupoMax        Int          @default(6)
+  imagen         String       @default("")
+  notaAdmin      String       @default("")
+  createdAt      DateTime     @default(now())
+  fechas         CursoFecha[]
+}
+
+// Fecha disponible de un curso (hora siempre 16:00 PE)
+model CursoFecha {
+  id            String             @id @default(cuid())
+  cursoId       String
+  curso         Curso              @relation(fields: [cursoId], references: [id], onDelete: Cascade)
+  fecha         DateTime
+  createdAt     DateTime           @default(now())
+  inscripciones TallerInscripcion[]
+
+  @@index([cursoId])
+  @@index([fecha])
+}
+
+// Inscripción de una cliente a una fecha de curso
+model TallerInscripcion {
+  id          String     @id @default(cuid())
+  fechaId     String
+  cursoFecha  CursoFecha @relation(fields: [fechaId], references: [id], onDelete: Cascade)
+  nombre      String
+  email       String
+  telefono    String
+  notas       String     @default("")
+  createdAt   DateTime   @default(now())
+
+  @@index([fechaId])
+  @@index([email])
+}
+
+model BlogPost {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  title     String
+  author    String   @default("Rossy")
+  date      String
+  excerpt   String   @default("")
+  content   Json     @default("[]")
+  image     String   @default("")
+  comments  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slug])
+}
+
+model NewsletterSubscriber {
+  email     String   @id
+  createdAt DateTime @default(now())
+}
+
+model CustomerProfile {
+  dni             String   @id
+  name            String
+  phone           String
+  locationLine    String
+  shippingCarrier String   @default("SHALOM")
+  shalomAgency    String   @default("")
+  olvaAddress     String   @default("")
+  olvaReference   String   @default("")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model CapacitacionInscripcion {
+  id              String    @id @default(cuid())
+  nombre          String
+  email           String
+  telefono        String    @default("")
+  curso           String
+  nivel           String    @default("Basico")
+  mensaje         String    @default("")
+  estado          String    @default("PENDIENTE")
+  fechaProgramada DateTime?
+  notaAdmin       String    @default("")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([email])
+  @@index([estado])
 }

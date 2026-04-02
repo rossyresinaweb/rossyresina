@@ -2,7 +2,6 @@ import { getServerSession } from "next-auth";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { authOptions } from "../auth/[...nextauth]";
 import prisma from "@/lib/prisma";
-import { readCatalog } from "@/lib/catalogStore";
 import { upsertCustomer } from "@/lib/customerStore";
 import {
   encodeOrderMeta,
@@ -217,19 +216,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const byId = new Map(products.map((p) => [String(p.id), p]));
       const byLegacyId = new Map(products.filter((p) => p.legacyId).map((p) => [String(p.legacyId), p]));
       const byCode = new Map(products.filter((p) => p.code).map((p) => [String(p.code), p]));
-      const catalogData = readCatalog();
-      const catalogRows = Array.isArray(catalogData) ? catalogData : [];
-      const catalogById = new Map(
-        catalogRows
-          .map((p: any) => [String(p?._id ?? "").trim(), p])
-          .filter(([k]: [string, any]) => Boolean(k))
-      );
-      const catalogByCode = new Map(
-        catalogRows
-          .map((p: any) => [String(p?.code ?? "").trim(), p])
-          .filter(([k]: [string, any]) => Boolean(k))
-      );
-
       const normalizedItems: Array<{
         productId: string;
         legacyId: string | null;
@@ -251,32 +237,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           .map((k) => byId.get(k) || byLegacyId.get(k) || byCode.get(k))
           .find(Boolean);
         if (!product) {
-          const fallback = candidateKeys
-            .map((k) => catalogById.get(k) || catalogByCode.get(k))
-            .find(Boolean);
-          if (fallback) {
-            const fallbackPrice = Number((fallback as any).price || 0);
-            const fallbackId = String((fallback as any)._id || candidateKeys[0] || "");
-            const fallbackCode = String((fallback as any).code || "");
-            const fallbackTitle = String((fallback as any).title || "Producto");
-            if (!Number.isFinite(fallbackPrice) || fallbackPrice <= 0) {
-              return res.status(400).json({
-                error: `Producto sin precio valido: ${candidateKeys[0] || "sin-id"}`,
-              });
-            }
-            computedTotal += fallbackPrice * qty;
-            normalizedItems.push({
-              productId: fallbackId,
-              legacyId: fallbackId || null,
-              code: fallbackCode || null,
-              title: fallbackTitle,
-              quantity: qty,
-              price: fallbackPrice,
-            });
-            continue;
-          }
           return res.status(400).json({
-            error: `Producto no encontrado en DB: ${candidateKeys[0] || "sin-id"}`,
+            error: `Producto no encontrado: ${candidateKeys[0] || "sin-id"}`,
           });
         }
         const price = Number(product.price);
@@ -344,7 +306,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         },
       });
 
-      upsertCustomer({
+      await upsertCustomer({
         dni,
         name,
         phone,

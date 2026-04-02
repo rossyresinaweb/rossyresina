@@ -3,7 +3,6 @@ import { getServerSession } from "next-auth";
 import type { Session } from "next-auth";
 import { authOptions } from "./auth/[...nextauth]";
 import prisma from "@/lib/prisma";
-import { readCatalog, writeCatalog } from "@/lib/catalogStore";
 
 const db = prisma as any;
 const productBaseSelect = {
@@ -22,20 +21,6 @@ const productBaseSelect = {
   isNew: true,
   stock: true,
 };
-const productLegacySelect = {
-  id: true,
-  legacyId: true,
-  code: true,
-  title: true,
-  description: true,
-  brand: true,
-  category: true,
-  image: true,
-  price: true,
-  oldPrice: true,
-  isNew: true,
-};
-
 const normalizeImages = (images: any): string[] => {
   if (Array.isArray(images)) return images.map((x) => String(x || "").trim()).filter(Boolean);
   if (typeof images === "string") {
@@ -117,7 +102,7 @@ const ensureUniqueBarcode = async (preferred: string | null, excludeId?: string)
       });
       return Boolean(found);
     } catch {
-      // Si la columna aÃºn no existe en DB, dejamos pasar y usamos valor generado.
+      // Si la columna aún no existe en DB, dejamos pasar y usamos valor generado.
       return false;
     }
   };
@@ -202,100 +187,6 @@ const toLegacyProduct = (p: any) => ({
   images: normalizeImages(p?.images),
 });
 
-const toLegacyFromCatalog = (p: any) => ({
-  _id: p?._id ?? p?.id ?? p?.code ?? "",
-  code: fixMojibakeText(p?.code || ""),
-  barcode: fixMojibakeText(p?.barcode || ""),
-  sku: fixMojibakeText(p?.sku || ""),
-  stock: normalizeStock(p?.stock),
-  title: fixMojibakeText(p?.title || "Producto"),
-  description: fixMojibakeText(p?.description || ""),
-  brand: fixMojibakeText(p?.brand || ""),
-  category: fixMojibakeText(p?.category || ""),
-  image: pickMainImage(p?.image, p?.images),
-  isNew: Boolean(p?.isNew),
-  oldPrice: p?.oldPrice != null ? Number(p.oldPrice) : undefined,
-  price: Number(p?.price || 0),
-  images: normalizeImages(p?.images),
-});
-
-const mergeProducts = (primaryRows: any[], secondaryRows: any[]) => {
-  const map = new Map<string, any>();
-
-  const upsert = (row: any, isPrimary: boolean) => {
-    const codeKey = String(row?.code || "").trim().toLowerCase();
-    const idKey = String(row?._id ?? "").trim();
-    const key = codeKey || idKey;
-    if (!key) return;
-
-    const incoming = { ...row, images: normalizeImages(row?.images) };
-    const existing = map.get(key);
-
-    if (!existing) {
-      map.set(key, incoming);
-      return;
-    }
-
-    const nextImages =
-      isPrimary
-        ? incoming.images && incoming.images.length > 0
-          ? incoming.images
-          : existing.images && existing.images.length > 0
-          ? existing.images
-          : []
-        : existing.images && existing.images.length > 0
-        ? existing.images
-        : incoming.images && incoming.images.length > 0
-        ? incoming.images
-        : [];
-
-    map.set(key, {
-      ...(isPrimary ? { ...existing, ...incoming } : { ...incoming, ...existing }),
-      image: pickMainImage(
-        (isPrimary ? incoming.image : existing.image) || (isPrimary ? existing.image : incoming.image) || "",
-        nextImages
-      ),
-      images: nextImages,
-    });
-  };
-
-  primaryRows.forEach((row) => upsert(row, true));
-  secondaryRows.forEach((row) => upsert(row, false));
-
-  return Array.from(map.values());
-};
-
-const enrichDbRowsWithCatalogImages = (dbRows: any[], catalogRows: any[]) => {
-  const byCode = new Map<string, any>();
-  const byId = new Map<string, any>();
-
-  (Array.isArray(catalogRows) ? catalogRows : []).forEach((row: any) => {
-    const codeKey = String(row?.code || "").trim().toLowerCase();
-    const idKey = String(row?._id ?? row?.id ?? "").trim().toLowerCase();
-    if (codeKey) byCode.set(codeKey, row);
-    if (idKey) byId.set(idKey, row);
-  });
-
-  return (Array.isArray(dbRows) ? dbRows : []).map((row: any) => {
-    const codeKey = String(row?.code || "").trim().toLowerCase();
-    const idKey = String(row?._id ?? row?.id ?? "").trim().toLowerCase();
-    const fromCatalog = (codeKey && byCode.get(codeKey)) || (idKey && byId.get(idKey)) || null;
-    if (!fromCatalog) return row;
-
-    const dbImages = normalizeImages(row?.images);
-    const dbImage = String(row?.image || "").trim();
-    const catalogImages = normalizeImages(fromCatalog?.images);
-    const catalogImage = String(fromCatalog?.image || "").trim();
-    const mergedImages = Array.from(new Set([...dbImages, ...catalogImages, ...(catalogImage ? [catalogImage] : [])]));
-
-    return {
-      ...row,
-      images: mergedImages,
-      image: pickMainImage(dbImage || catalogImage, mergedImages),
-    };
-  });
-};
-
 const toDbData = (body: any) => {
   const legacyId = String(body?._id ?? "").trim() || null;
   const code = fixMojibakeText(String(body?.code ?? "").trim()) || null;
@@ -312,72 +203,6 @@ const toDbData = (body: any) => {
   const barcode = sanitizeBarcode(body?.barcode);
   const sku = fixMojibakeText(String(body?.sku || "").trim()) || null;
   return { legacyId, code, barcode, sku, title, description, brand, category, image, images: gallery, price, oldPrice, isNew, stock };
-};
-
-const syncCatalogProduct = (payload: any) => {
-  const catalog = readCatalog();
-  const rows = Array.isArray(catalog) ? [...catalog] : [];
-
-  const code = String(payload?.code || "").trim().toLowerCase();
-  const id = String(payload?._id ?? "").trim();
-  const idxByCode = code
-    ? rows.findIndex((p: any) => String(p?.code || "").trim().toLowerCase() === code)
-    : -1;
-  const idxById =
-    idxByCode >= 0
-      ? -1
-      : id
-      ? rows.findIndex((p: any) => String(p?._id ?? "").trim() === id)
-      : -1;
-  const idx = idxByCode >= 0 ? idxByCode : idxById;
-
-  const next = {
-    ...(idx >= 0 ? rows[idx] : {}),
-    ...fixProductTextFields(payload),
-    images: normalizeImages(payload?.images),
-  };
-
-  if (idx >= 0) rows[idx] = next;
-  else rows.unshift(next);
-
-  try {
-    writeCatalog(rows);
-  } catch {
-    // En Vercel el filesystem puede ser de solo lectura; no bloquear el guardado en DB.
-  }
-};
-
-const removeCatalogProducts = (keys: string[], preferredCode?: string) => {
-  try {
-    const catalog = readCatalog();
-    const rows = Array.isArray(catalog) ? catalog : [];
-    const normalizedKeys = Array.from(
-      new Set(
-        (Array.isArray(keys) ? keys : [])
-          .map((k) => String(k || "").trim().toLowerCase())
-          .filter(Boolean)
-      )
-    );
-    const code = String(preferredCode || "").trim().toLowerCase();
-    if (normalizedKeys.length === 0 && !code) return;
-
-    const next = rows.filter((p: any) => {
-      const pId = String(p?._id ?? "").trim().toLowerCase();
-      const pCode = String(p?.code || "").trim().toLowerCase();
-      if (code) return pCode !== code;
-      return !normalizedKeys.includes(pId) && !normalizedKeys.includes(pCode);
-    });
-
-    if (next.length !== rows.length) {
-      try {
-        writeCatalog(next);
-      } catch {
-        // Ignorar en entornos sin escritura local.
-      }
-    }
-  } catch {
-    // Ignorar fallos de filesystem en serverless.
-  }
 };
 
 const isMissingImagesColumnError = (error: any) => {
@@ -442,29 +267,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (req.method === "GET") {
     try {
-      let products: any[] = [];
-      try {
-        products = await withDbRetry(() =>
-          db.product.findMany({
+      const products = await withDbRetry(() =>
+        db.product.findMany({
           orderBy: { createdAt: "desc" },
           select: { ...productBaseSelect, images: true },
-          })
-        );
-      } catch {
-        products = await withDbRetry(() =>
-          db.product.findMany({
-          orderBy: { createdAt: "desc" },
-          select: productLegacySelect,
-          })
-        );
-      }
-      
-      // Merge con catálogo local para asegurar sincronización
-      const catalog = readCatalog();
-      const catalogRows = Array.isArray(catalog) ? catalog.map(toLegacyFromCatalog) : [];
-      const merged = mergeProducts(products.map(toLegacyProduct), catalogRows);
-      
-      return res.status(200).json(merged);
+        })
+      );
+      return res.status(200).json(products.map(toLegacyProduct));
     } catch (error: any) {
       return res.status(500).json({ error: toFriendlyDbError(error, "No se pudieron obtener productos") });
     }
@@ -520,9 +329,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         ...toLegacyProduct(created),
         images: cloudinaryImages,
       };
-
-      // CRÍTICO: Sincronizar cambios al catálogo JSON local
-      syncCatalogProduct(responseRow);
 
       return res.status(201).json(responseRow);
     } catch (error: any) {
@@ -643,9 +449,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         images: finalImages.length > 0 ? finalImages : cloudinaryImages,
       };
 
-      // CRÍTICO: Sincronizar cambios al catálogo JSON local
-      syncCatalogProduct(responseRow);
-
       return res.status(200).json(responseRow);
     } catch (error: any) {
       return res.status(500).json({ error: toFriendlyDbError(error, "No se pudo actualizar producto") });
@@ -677,22 +480,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         // Eliminar de la BD
         await withDbRetry(() => db.product.delete({ where: { id: existing.id } }));
         
-        // CRÍTICO: También eliminar del catálogo JSON local
-        try {
-          const catalog = readCatalog();
-          const filtered = (Array.isArray(catalog) ? catalog : []).filter((p: any) => {
-            const pCode = String(p?.code || "").trim().toLowerCase();
-            const pId = String(p?._id ?? p?.id ?? "").trim().toLowerCase();
-            const targetCode = String(existing.code || "").trim().toLowerCase();
-            const targetId = String(existing.id ?? existing.legacyId ?? "").trim().toLowerCase();
-            return pCode !== targetCode && pId !== targetId;
-          });
-          if (filtered.length !== catalog.length) {
-            writeCatalog(filtered);
-          }
-        } catch {
-          // Ignorar si el filesystem no permite escritura (ej: Vercel production)
-        }
       }
 
       return res.status(204).end();

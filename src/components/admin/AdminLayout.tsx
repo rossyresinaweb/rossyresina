@@ -43,6 +43,7 @@ const navGroups = [
     label: "Contenido",
     items: [
       { href: "/admin/capacitaciones", label: "Capacitaciones", icon: AcademicCapIcon },
+      { href: "/admin/inscripciones", label: "Inscripciones", icon: UserGroupIcon },
       { href: "/admin/blog", label: "Blog", icon: DocumentTextIcon },
     ],
   },
@@ -68,6 +69,7 @@ const sectionTitleByPath = (pathname: string): { title: string; breadcrumb: stri
   if (pathname === "/admin") return { title: "Productos", breadcrumb: ["Catálogo", "Productos"] };
   if (pathname.startsWith("/admin/categories")) return { title: "Categorías", breadcrumb: ["Catálogo", "Categorías"] };
   if (pathname.startsWith("/admin/capacitaciones")) return { title: "Capacitaciones", breadcrumb: ["Contenido", "Capacitaciones"] };
+  if (pathname.startsWith("/admin/inscripciones")) return { title: "Inscripciones", breadcrumb: ["Contenido", "Inscripciones"] };
   if (pathname.startsWith("/admin/blog")) return { title: "Blog", breadcrumb: ["Contenido", "Blog"] };
   if (pathname.startsWith("/admin/orders")) return { title: "Pedidos", breadcrumb: ["Comercio", "Pedidos"] };
   if (pathname.startsWith("/admin/customers")) return { title: "Clientes", breadcrumb: ["Comercio", "Clientes"] };

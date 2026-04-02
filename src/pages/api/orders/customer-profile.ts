@@ -13,7 +13,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const q = query.toLowerCase();
-    const rows = readCustomers();
+    const rows = await readCustomers();
     const best =
       rows.find((c) => String(c.dni || "") === query) ||
       rows.find((c) => String(c.name || "").toLowerCase() === q) ||

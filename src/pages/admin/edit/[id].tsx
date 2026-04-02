@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import type { GetServerSideProps } from "next";
 import Image from "next/image";
+import ProductVariants, { type Variant } from "@/components/admin/ProductVariants";
 
 const normalizeUrls = (value: any): string[] => {
   if (!Array.isArray(value)) return [];
@@ -46,6 +47,8 @@ export default function EditProduct() {
   const [saveError, setSaveError] = useState("");
   const [saveOk, setSaveOk] = useState("");
   const [categories, setCategories] = useState<Array<{ _id: number; name: string; slug: string }>>([]);
+  const [variants, setVariants] = useState<Variant[]>([]);
+  const [productDbId, setProductDbId] = useState<string | undefined>(undefined);
 
   const galleryImages = useMemo(() => normalizeUrls(form?.images), [form?.images]);
 const mainImagePreview = useMemo(() => {
@@ -70,6 +73,11 @@ const mainImagePreview = useMemo(() => {
           const images = normalizeUrls(found.images);
           const normalizedImages = images.length > 0 ? images : found.image ? [String(found.image)] : [];
           setForm({ ...found, images: normalizedImages, image: String(found.image || normalizedImages[0] || "") });
+          // Cargar variantes del producto
+          const dbId = found.id || found._id;
+          setProductDbId(String(dbId));
+          const vRes = await fetch(`/api/products/variants?productId=${dbId}`);
+          if (vRes.ok) setVariants(await vRes.json());
         }
       } finally {
         setLoading(false);
@@ -329,6 +337,10 @@ const mainImagePreview = useMemo(() => {
               <span>Nuevo</span>
             </label>
           </div>
+
+          {form?.category === "Resinas" && (
+            <ProductVariants productId={productDbId} variants={variants} onChange={setVariants} />
+          )}
 
           <div className="space-y-3 border-t border-gray-100 pt-4">
             {saveError ? <p className="text-sm text-red-600">{saveError}</p> : null}
