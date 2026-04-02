@@ -304,33 +304,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       let existing: any = null;
       if (data.code) {
-        try {
-          existing = await withDbRetry(() => db.product.findFirst({
-            where: { code: data.code },
-            select: { id: true, barcode: true, image: true, images: true },
-          }));
-        } catch (error) {
-          if (!isMissingImagesColumnError(error)) throw error;
-          existing = await withDbRetry(() => db.product.findFirst({
-            where: { code: data.code },
-            select: { id: true, image: true },
-          }));
-        }
+        existing = await withDbRetry(() => db.product.findFirst({
+          where: { code: data.code },
+          select: { id: true, barcode: true, image: true, images: true },
+        }));
       }
       if (!existing) {
         const orWhere: any[] = [{ id: key }, { legacyId: key }, { code: key }];
-        try {
-          existing = await withDbRetry(() => db.product.findFirst({
-            where: { OR: orWhere },
-            select: { id: true, barcode: true, image: true, images: true },
-          }));
-        } catch (error) {
-          if (!isMissingImagesColumnError(error)) throw error;
-          existing = await withDbRetry(() => db.product.findFirst({
-            where: { OR: orWhere },
-            select: { id: true, image: true },
-          }));
-        }
+        existing = await withDbRetry(() => db.product.findFirst({
+          where: { OR: orWhere },
+          select: { id: true, barcode: true, image: true, images: true },
+        }));
       }
       if (!existing) return res.status(404).json({ error: "Producto no encontrado" });
 
