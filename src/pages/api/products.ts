@@ -49,16 +49,6 @@ const fixMojibakeText = (value: any): string => {
   return out;
 };
 
-const fixProductTextFields = (row: any) => ({
-  ...row,
-  code: fixMojibakeText(row?.code || ""),
-  barcode: fixMojibakeText(row?.barcode || ""),
-  title: fixMojibakeText(row?.title || ""),
-  description: fixMojibakeText(row?.description || ""),
-  brand: fixMojibakeText(row?.brand || ""),
-  category: fixMojibakeText(row?.category || ""),
-});
-
 const normalizeStock = (value: any): number => {
   const n = Number(value);
   if (!Number.isFinite(n)) return 0;
@@ -205,23 +195,6 @@ const toDbData = (body: any) => {
   return { legacyId, code, barcode, sku, title, description, brand, category, image, images: gallery, price, oldPrice, isNew, stock };
 };
 
-const isMissingImagesColumnError = (error: any) => {
-  const msg = String(error?.message || "").toLowerCase();
-  return (
-    msg.includes("unknown arg `images`") ||
-    msg.includes("unknown arg `stock`") ||
-    msg.includes("unknown arg `barcode`") ||
-    msg.includes("column") && msg.includes("images") && msg.includes("does not exist")
-    || (msg.includes("column") && msg.includes("stock") && msg.includes("does not exist"))
-    || (msg.includes("column") && msg.includes("barcode") && msg.includes("does not exist"))
-  );
-};
-
-const stripImagesField = (data: any) => {
-  const { images, stock, barcode, ...rest } = data || {};
-  return rest;
-};
-
 const isTooManyClientsError = (error: any): boolean =>
   /too many clients|too many connections|too many database connections/i.test(
     String(error?.message || "")
@@ -299,38 +272,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       const where = data.code ? { code: data.code } : data.legacyId ? { legacyId: data.legacyId } : null;
       let created: any;
-      try {
-        created = where
-          ? await withDbRetry(() =>
-              db.product.upsert({
-              where,
-              create: data,
-              update: data,
-              select: productBaseSelect,
-            })
-            )
-          : await withDbRetry(() => db.product.create({ data, select: productBaseSelect }));
-      } catch (error) {
-        if (!isMissingImagesColumnError(error)) throw error;
-        const legacyData = stripImagesField(data);
-        created = where
-          ? await withDbRetry(() =>
-              db.product.upsert({
-              where,
-              create: legacyData,
-              update: legacyData,
-              select: productLegacySelect,
-            })
-            )
-          : await withDbRetry(() => db.product.create({ data: legacyData, select: productLegacySelect }));
-      }
+      created = where
+        ? await withDbRetry(() =>
+            db.product.upsert({
+            where,
+            create: data,
+            update: data,
+            select: { ...productBaseSelect, images: true },
+          })
+          )
+        : await withDbRetry(() => db.product.create({ data, select: { ...productBaseSelect, images: true } }));
 
-      const responseRow = {
+      return res.status(201).json({
         ...toLegacyProduct(created),
         images: cloudinaryImages,
-      };
-
-      return res.status(201).json(responseRow);
+      });
     } catch (error: any) {
       return res.status(500).json({ error: toFriendlyDbError(error, "No se pudo crear producto") });
     }
@@ -420,36 +376,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       let updated: any;
-      try {
-        updated = existing
-          ? await withDbRetry(() =>
-              db.product.update({
-              where: { id: existing.id },
-              data,
-              select: productBaseSelect,
-            })
-            )
-          : await withDbRetry(() => db.product.create({ data, select: productBaseSelect }));
-      } catch (error) {
-        if (!isMissingImagesColumnError(error)) throw error;
-        const legacyData = stripImagesField(data);
-        updated = existing
-          ? await withDbRetry(() =>
-              db.product.update({
-              where: { id: existing.id },
-              data: legacyData,
-              select: productLegacySelect,
-            })
-            )
-          : await withDbRetry(() => db.product.create({ data: legacyData, select: productLegacySelect }));
-      }
+      updated = existing
+        ? await withDbRetry(() =>
+            db.product.update({
+            where: { id: existing.id },
+            data,
+            select: { ...productBaseSelect, images: true },
+          })
+          )
+        : await withDbRetry(() => db.product.create({ data, select: { ...productBaseSelect, images: true } }));
 
-      const responseRow = {
+      return res.status(200).json({
         ...toLegacyProduct(updated),
-        images: finalImages.length > 0 ? finalImages : cloudinaryImages,
-      };
-
-      return res.status(200).json(responseRow);
+        images: finalImages,
+      });
     } catch (error: any) {
       return res.status(500).json({ error: toFriendlyDbError(error, "No se pudo actualizar producto") });
     }
