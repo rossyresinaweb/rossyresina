@@ -19,6 +19,7 @@ import {
   BellIcon,
   Cog6ToothIcon,
   HomeIcon,
+  BoltIcon,
 } from "@heroicons/react/24/outline";
 
 interface Props {
@@ -37,6 +38,7 @@ const navGroups = [
     items: [
       { href: "/admin", label: "Productos", icon: CubeIcon, exact: true },
       { href: "/admin/categories", label: "Categorías", icon: TagIcon },
+      { href: "/admin/ofertas-express", label: "Ofertas Express", icon: BoltIcon },
     ],
   },
   {
@@ -76,7 +78,7 @@ const sectionTitleByPath = (pathname: string): { title: string; breadcrumb: stri
   if (pathname.startsWith("/admin/stats")) return { title: "Estadísticas", breadcrumb: ["Analítica", "Estadísticas"] };
   if (pathname.startsWith("/admin/visits")) return { title: "Visitas", breadcrumb: ["Analítica", "Visitas"] };
   if (pathname.startsWith("/admin/users")) return { title: "Usuarios", breadcrumb: ["Analítica", "Usuarios"] };
-  if (pathname.startsWith("/admin/new")) return { title: "Nuevo producto", breadcrumb: ["Catálogo", "Nuevo producto"] };
+  if (pathname.startsWith("/admin/ofertas-express")) return { title: "Ofertas Express", breadcrumb: ["Catálogo", "Ofertas Express"] };
   if (pathname.startsWith("/admin/edit")) return { title: "Editar producto", breadcrumb: ["Catálogo", "Editar producto"] };
   return { title: "Panel", breadcrumb: ["Admin"] };
 };

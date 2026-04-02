@@ -16,9 +16,10 @@ import { getPurchaseBehaviorSnapshot, type PurchaseBehaviorSnapshot } from "@/li
 interface Props {
   productData: ProductProps[];
   behavior: PurchaseBehaviorSnapshot;
+  ofertasExpress: { id: string; nombre: string; imagen: string }[];
 }
 
-export default function Home({ productData, behavior }: Props) {
+export default function Home({ productData, behavior, ofertasExpress }: Props) {
   const SITE_URL = "https://rossyresinaonlineweb.vercel.app";
   const pageTitle = "Rossy Resina | Resina epóxica, moldes y pigmentos en Perú";
   const pageDesc =
@@ -479,7 +480,30 @@ export default function Home({ productData, behavior }: Props) {
           )}
         </section>
 
-        {/* Ofertas relámpago */}
+        {/* Ofertas Express */}
+        {ofertasExpress.length > 0 && (
+        <section className="px-4 md:px-6">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-xl">⚡</span>
+            <h2 className="text-xl font-semibold uppercase tracking-wide text-orange-500">Ofertas Express</h2>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
+            {ofertasExpress.map((item) => (
+              <div key={item.id} className="rounded-xl border border-orange-100 bg-white p-2 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 group">
+                <div className="relative h-32 w-full overflow-hidden rounded-lg bg-gray-50">
+                  <Image src={item.imagen} alt={item.nombre} fill className="object-cover transition-transform duration-300 group-hover:scale-105" />
+                  <div className="absolute top-1.5 left-1.5">
+                    <span className="bg-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">EXPRESS</span>
+                  </div>
+                </div>
+                <p className="mt-2 text-xs font-semibold text-gray-800 text-center line-clamp-2 group-hover:text-orange-500 transition-colors">{item.nombre}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+        )}
+
+        {/* Ofertas relámpago */}}
         <section className="px-4 md:px-6">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
@@ -617,7 +641,13 @@ export const getServerSideProps = async () => {
   try {
     const productData = await getAllProducts();
     const behavior = await getPurchaseBehaviorSnapshot(8, 12, 180);
-    return { props: { productData, behavior } };
+    const prisma = (await import("@/lib/prisma")).default as any;
+    const ofertasExpress = await prisma.ofertaExpress.findMany({
+      where: { activo: true },
+      orderBy: [{ orden: "asc" }, { createdAt: "desc" }],
+      select: { id: true, nombre: true, imagen: true },
+    });
+    return { props: { productData, behavior, ofertasExpress: JSON.parse(JSON.stringify(ofertasExpress)) } };
   } catch (e) {
     return {
       props: {
@@ -628,6 +658,7 @@ export const getServerSideProps = async () => {
           topProductKeys: [],
           topOfferProductKeys: [],
         } as PurchaseBehaviorSnapshot,
+        ofertasExpress: [],
       },
     };
   }
