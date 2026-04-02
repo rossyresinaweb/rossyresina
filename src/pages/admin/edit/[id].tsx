@@ -1,4 +1,4 @@
-﻿import { useRouter } from "next/router";
+import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
@@ -40,6 +40,7 @@ export default function EditProduct() {
   const { id } = router.query as { id?: string };
   const [form, setForm] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
@@ -61,13 +62,19 @@ const mainImagePreview = useMemo(() => {
     const load = async () => {
       if (!id) return;
       try {
+        setLoadError("");
         const res = await fetch("/api/products");
         const items = await res.json();
+        if (!res.ok || !Array.isArray(items)) {
+          setLoadError("No se pudo cargar la lista de productos.");
+          return;
+        }
         const needle = String(id || "").trim().toLowerCase();
         const found = items.find((p: any) => {
           const pCode = String(p?.code || "").trim().toLowerCase();
           const pId = String(p?._id || "").trim().toLowerCase();
-          return (needle && pCode === needle) || (needle && pId === needle);
+          const pRawId = String(p?.id || "").trim().toLowerCase();
+          return (needle && pCode === needle) || (needle && pId === needle) || (needle && pRawId === needle);
         });
         if (found) {
           const images = normalizeUrls(found.images);
@@ -78,7 +85,11 @@ const mainImagePreview = useMemo(() => {
           setProductDbId(String(dbId));
           const vRes = await fetch(`/api/products/variants?productId=${dbId}`);
           if (vRes.ok) setVariants(await vRes.json());
+        } else {
+          setLoadError("No se encontró el producto solicitado.");
         }
+      } catch {
+        setLoadError("Ocurrió un error cargando el producto.");
       } finally {
         setLoading(false);
       }
@@ -222,7 +233,23 @@ const mainImagePreview = useMemo(() => {
     setForm({ ...form, image: url });
   };
 
-  if (loading || !form) return <div className="mx-auto max-w-4xl p-6">Cargando...</div>;
+  if (loading) return <div className="mx-auto max-w-4xl p-6">Cargando...</div>;
+
+  if (!form) {
+    return (
+      <div className="mx-auto max-w-4xl p-6">
+        <h1 className="text-xl font-semibold text-gray-900">Editar producto</h1>
+        <p className="mt-3 text-sm text-red-600">{loadError || "No se pudo cargar el producto."}</p>
+        <button
+          type="button"
+          onClick={() => router.push("/admin")}
+          className="mt-4 rounded-md border border-gray-300 px-4 py-2 hover:bg-gray-50"
+        >
+          Volver al listado
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-6xl p-6">
